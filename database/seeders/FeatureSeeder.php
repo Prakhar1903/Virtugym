@@ -77,7 +77,7 @@ class FeatureSeeder extends Seeder
                 'description' => 'Guided stretching for major muscle groups.',
                 'content' => "Effective recovery is key to muscle growth.\n\n- Hold each stretch for 30 seconds.\n- Focus on the muscle being stretched.\n- Do not bounce; keep the tension steady.",
                 'duration_minutes' => 15,
-                'media_url' => 'https://www.youtube.com/watch?v=u9Q8D6n-3qw',
+                'media_url' => 'https://www.youtube.com/watch?v=g_tea8ZNk5A',
                 'image_url' => 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=800'
             ],
             [
@@ -86,7 +86,7 @@ class FeatureSeeder extends Seeder
                 'description' => 'A simple technique to calm the nervous system.',
                 'content' => "Box breathing is used by athletes and Navy SEALs to stay calm under pressure.\n\n- Inhale for 4 seconds.\n- Hold for 4 seconds.\n- Exhale for 4 seconds.\n- Hold for 4 seconds.\n- Repeat 4 times.",
                 'duration_minutes' => 5,
-                'media_url' => 'https://www.youtube.com/watch?v=tEmt1Znux58',
+                'media_url' => 'https://www.youtube.com/watch?v=aNXKjGFUlMs',
                 'image_url' => 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&q=80&w=800'
             ]
         ];
