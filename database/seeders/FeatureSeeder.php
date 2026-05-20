@@ -22,7 +22,8 @@ class FeatureSeeder extends Seeder
                 'tips' => 'Keep your back straight and weight on your heels.',
                 'benefits' => 'Builds leg strength, improves core stability, and increases bone density.',
                 'precautions' => 'Avoid if you have acute back or knee injuries. Maintain proper spinal alignment.',
-                'calories_per_hour' => 400
+                'calories_per_hour' => 400,
+                'video_url' => 'https://www.youtube.com/watch?v=MVMnk0ZaH1E'
             ],
             [
                 'name' => 'Pushups',
@@ -32,7 +33,8 @@ class FeatureSeeder extends Seeder
                 'difficulty' => 'Beginner',
                 'instructions' => 'Start in plank position. Lower body until chest nearly touches floor. Push back up.',
                 'tips' => 'Engage your core to keep body straight.',
-                'calories_per_hour' => 300
+                'calories_per_hour' => 300,
+                'video_url' => 'https://www.youtube.com/watch?v=IODxDxX7oi4'
             ],
             [
                 'name' => 'Deadlift',
@@ -42,7 +44,8 @@ class FeatureSeeder extends Seeder
                 'difficulty' => 'Advanced',
                 'instructions' => 'Stand with feet hip-width apart. Grip barbell. Lift by extending hips and knees.',
                 'tips' => 'Keep the bar close to your shins.',
-                'calories_per_hour' => 500
+                'calories_per_hour' => 500,
+                'video_url' => 'https://www.youtube.com/watch?v=op9kVnSso6Q'
             ],
             [
                 'name' => 'Plank',
@@ -52,7 +55,8 @@ class FeatureSeeder extends Seeder
                 'difficulty' => 'Beginner',
                 'instructions' => 'Hold a pushup-like position but on your forearms.',
                 'tips' => 'Do not let your hips sag.',
-                'calories_per_hour' => 150
+                'calories_per_hour' => 150,
+                'video_url' => 'https://www.youtube.com/watch?v=pSHjTRCQxIw'
             ]
         ];
         

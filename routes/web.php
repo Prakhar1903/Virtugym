@@ -82,6 +82,8 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     // Water Intake
     Route::get('/water', [WaterIntakeController::class, 'index'])->name('water.index');
     Route::post('/water', [WaterIntakeController::class, 'store'])->name('water.store');
+    Route::post('/water/goal', [WaterIntakeController::class, 'updateGoal'])->name('water.goal');
+    Route::delete('/water/{id}', [WaterIntakeController::class, 'destroy'])->name('water.destroy');
 
     // Mindfulness & Recovery
     Route::get('/mindfulness', [MindfulnessController::class, 'index'])->name('mindfulness.index');
@@ -91,6 +93,10 @@ Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
     
     // ============ AI ROUTES ============
     Route::prefix('ai')->name('ai.')->group(function () {
@@ -162,6 +168,7 @@ Route::post('/withdrawal/request', [TrainerDashboardController::class, 'requestW
         Route::get('/join/{booking_id}', [VideoCallController::class, 'join'])->name('join');
         Route::post('/start/{booking_id}', [VideoCallController::class, 'startMeeting'])->name('start');
         Route::post('/end/{booking_id}', [VideoCallController::class, 'endMeeting'])->name('end');
+        Route::get('/session-status', [VideoCallController::class, 'sessionStatus'])->name('session-status');
     });
 });
 Route::get('/health', function () {

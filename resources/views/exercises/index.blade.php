@@ -31,8 +31,40 @@
         -webkit-text-fill-color: #ffffff !important;
         -webkit-box-shadow: 0 0 0px 1000px #0a0a1a inset !important;
     }
+
+    /* Custom Dropdown Styling */
+    .custom-select-container.active .custom-select-trigger {
+        border-color: rgba(139, 92, 246, 0.6) !important;
+        box-shadow: 0 0 12px rgba(139, 92, 246, 0.3) !important;
+    }
+    .custom-select-container.active .chevron-icon {
+        transform: rotate(180deg) !important;
+        opacity: 1 !important;
+        color: #8b5cf6 !important;
+    }
+    .custom-select-options.show {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transform: translateY(0) scale(1) !important;
+    }
+    .custom-select-option {
+        padding: 12px 16px;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.85rem;
+    }
+    .custom-select-option:hover {
+        background: rgba(139, 92, 246, 0.15);
+        color: #fff;
+    }
+    .custom-select-option.selected {
+        background: rgba(139, 92, 246, 0.2);
+        color: #c4b5fd;
+        font-weight: 700;
+    }
 </style>
-<div style="max-width:1280px;margin:0 auto;">
+<div style="max-width:1450px;margin:0 auto;">
     <!-- Header -->
     <div style="margin-bottom:2.5rem; display: flex; justify-content: space-between; align-items: flex-end;" class="fade-in-up">
         <div>
@@ -45,21 +77,20 @@
         </div>
         
         <div style="display: flex; gap: 12px; align-items: center;">
-            <button onclick="filterSaved(this)" class="btn-outline" id="savedFilterBtn" style="border-radius: 14px; padding: 12px 20px; display: inline-flex; align-items: center; gap: 8px; height: 46px;">
+            <button onclick="filterSaved(this)" id="savedFilterBtn" style="border-radius: 12px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; transition: all 0.3s;" onmouseover="if(!this.classList.contains('active-filter')) this.style.background='rgba(255,255,255,0.1)'" onmouseout="if(!this.classList.contains('active-filter')) this.style.background='rgba(255, 255, 255, 0.05)'">
                 <i data-lucide="bookmark" style="width: 18px; height: 18px;"></i>
-                <span style="font-weight: 600;">Saved</span>
+                <span>Saved</span>
             </button>
             @if(Auth::user()->role === 'trainer')
-                <button onclick="openCustomExerciseModal()" class="btn-premium" style="height: 46px; display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px;">
-                    <i data-lucide="plus-circle" style="width: 18px; height: 18px;"></i>
-                    <span style="font-weight: 600;">Add Custom Exercise</span>
+                <button onclick="openCustomExerciseModal()" style="border-radius: 12px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; border: 1px solid transparent; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(139, 92, 246, 0.5)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(139, 92, 246, 0.3)'">
+                    <i data-lucide="plus" style="width: 18px; height: 18px;"></i> Add Custom Exercise
                 </button>
             @endif
         </div>
     </div>
     
     <!-- Search & Filters -->
-    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.12);border-radius:24px;padding:1.8rem;margin-bottom:2.5rem; backdrop-filter: blur(10px);" class="fade-in-up delay-1">
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.12);border-radius:24px;padding:1.8rem;margin-bottom:2.5rem; backdrop-filter: blur(10px); position: relative; z-index: 50;" class="fade-in-up delay-1">
         <form id="filterForm" method="GET" action="{{ route('exercises.index') }}">
             <div style="display:grid;grid-template-columns: 2fr 1fr 1fr 1fr; gap: 1.5rem; align-items: flex-end;">
                 <div>
@@ -83,41 +114,96 @@
                 
                 <div>
                     <label style="display:block;font-size:.73rem;font-weight:800;color:rgba(196,181,253,.5);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Muscle Group</label>
-                    <select name="muscle_group" onchange="this.form.submit()"
-                            style="width:100%;padding:14px 14px;background:#0a0a1a;border:1px solid rgba(139,92,246,.2);border-radius:14px;color:#fff;font-size:.9rem;outline:none;cursor: pointer;">
-                        <option value="" style="background: #0a0a1a !important; color: #fff !important;">All Groups</option>
-                        @foreach($muscleGroups as $group)
-                            <option value="{{ $group }}" {{ request('muscle_group') == $group ? 'selected' : '' }} style="background: #0a0a1a !important; color: #fff !important;">
-                                {{ $group }} ({{ $muscleCounts[$group] ?? 0 }})
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="custom-select-container" style="position: relative; width: 100%;" id="muscle_group_container">
+                        <select name="muscle_group" id="muscle_group_select" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                            <option value="">All Groups</option>
+                            @foreach($muscleGroups as $group)
+                                <option value="{{ $group }}" {{ request('muscle_group') == $group ? 'selected' : '' }}>
+                                    {{ $group }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="custom-select-trigger" onclick="toggleCustomDropdown('muscle_group', event)" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 0.9rem; background: #0a0a1a; border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; color: #fff; cursor: pointer; transition: all 0.3s ease; user-select: none;">
+                            <span style="font-weight: 500;">
+                                @if(request('muscle_group'))
+                                    {{ request('muscle_group') }} ({{ $muscleCounts[request('muscle_group')] ?? 0 }})
+                                @else
+                                    All Groups
+                                @endif
+                            </span>
+                            <i data-lucide="chevron-down" class="chevron-icon" style="width: 16px; height: 16px; opacity: 0.5; transition: transform 0.3s, opacity 0.3s;"></i>
+                        </div>
+                        <div class="custom-select-options" id="muscle_group_options" style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: rgba(10, 10, 26, 0.98); backdrop-filter: blur(16px); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; z-index: 100; opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); max-height: 250px; overflow-y: auto;">
+                            <div class="custom-select-option {{ !request('muscle_group') ? 'selected' : '' }}" onclick="selectCustomOption('muscle_group', '', 'All Groups', event)">
+                                All Groups
+                            </div>
+                            @foreach($muscleGroups as $group)
+                                <div class="custom-select-option {{ request('muscle_group') == $group ? 'selected' : '' }}" onclick="selectCustomOption('muscle_group', '{{ $group }}', '{{ $group }} ({{ $muscleCounts[$group] ?? 0 }})', event)">
+                                    {{ $group }} ({{ $muscleCounts[$group] ?? 0 }})
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
                 
                 <div>
                     <label style="display:block;font-size:.73rem;font-weight:800;color:rgba(196,181,253,.5);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Equipment</label>
-                    <select name="equipment" onchange="this.form.submit()"
-                            style="width:100%;padding:14px 14px;background:#0a0a1a;border:1px solid rgba(139,92,246,.2);border-radius:14px;color:#fff;font-size:.9rem;outline:none;cursor: pointer;">
-                        <option value="" style="background: #0a0a1a !important; color: #fff !important;">All Equipment</option>
-                        @foreach($equipmentList as $equip)
-                            <option value="{{ $equip }}" {{ request('equipment') == $equip ? 'selected' : '' }} style="background: #0a0a1a !important; color: #fff !important;">
-                                {{ $equip }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="custom-select-container" style="position: relative; width: 100%;" id="equipment_container">
+                        <select name="equipment" id="equipment_select" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                            <option value="">All Equipment</option>
+                            @foreach($equipmentList as $equip)
+                                <option value="{{ $equip }}" {{ request('equipment') == $equip ? 'selected' : '' }}>
+                                    {{ $equip }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="custom-select-trigger" onclick="toggleCustomDropdown('equipment', event)" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 0.9rem; background: #0a0a1a; border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; color: #fff; cursor: pointer; transition: all 0.3s ease; user-select: none;">
+                            <span style="font-weight: 500;">
+                                {{ request('equipment') ? request('equipment') : 'All Equipment' }}
+                            </span>
+                            <i data-lucide="chevron-down" class="chevron-icon" style="width: 16px; height: 16px; opacity: 0.5; transition: transform 0.3s, opacity 0.3s;"></i>
+                        </div>
+                        <div class="custom-select-options" id="equipment_options" style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: rgba(10, 10, 26, 0.98); backdrop-filter: blur(16px); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; z-index: 100; opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); max-height: 250px; overflow-y: auto;">
+                            <div class="custom-select-option {{ !request('equipment') ? 'selected' : '' }}" onclick="selectCustomOption('equipment', '', 'All Equipment', event)">
+                                All Equipment
+                            </div>
+                            @foreach($equipmentList as $equip)
+                                <div class="custom-select-option {{ request('equipment') == $equip ? 'selected' : '' }}" onclick="selectCustomOption('equipment', '{{ $equip }}', '{{ $equip }}', event)">
+                                    {{ $equip }}
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
                 
                 <div>
                     <label style="display:block;font-size:.73rem;font-weight:800;color:rgba(196,181,253,.5);letter-spacing:.08em;margin-bottom:10px;text-transform:uppercase;">Level</label>
-                    <select name="difficulty" onchange="this.form.submit()"
-                            style="width:100%;padding:14px 14px;background:#0a0a1a;border:1px solid rgba(139,92,246,.2);border-radius:14px;color:#fff;font-size:.9rem;outline:none;cursor: pointer;">
-                        <option value="" style="background: #0a0a1a !important; color: #fff !important;">All Levels</option>
-                        @foreach($difficulties as $diff)
-                            <option value="{{ $diff }}" {{ request('difficulty') == $diff ? 'selected' : '' }} style="background: #0a0a1a !important; color: #fff !important;">
-                                {{ $diff }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="custom-select-container" style="position: relative; width: 100%;" id="difficulty_container">
+                        <select name="difficulty" id="difficulty_select" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                            <option value="">All Levels</option>
+                            @foreach($difficulties as $diff)
+                                <option value="{{ $diff }}" {{ request('difficulty') == $diff ? 'selected' : '' }}>
+                                    {{ $diff }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="custom-select-trigger" onclick="toggleCustomDropdown('difficulty', event)" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; font-size: 0.9rem; background: #0a0a1a; border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; color: #fff; cursor: pointer; transition: all 0.3s ease; user-select: none;">
+                            <span style="font-weight: 500;">
+                                {{ request('difficulty') ? request('difficulty') : 'All Levels' }}
+                            </span>
+                            <i data-lucide="chevron-down" class="chevron-icon" style="width: 16px; height: 16px; opacity: 0.5; transition: transform 0.3s, opacity 0.3s;"></i>
+                        </div>
+                        <div class="custom-select-options" id="difficulty_options" style="position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: rgba(10, 10, 26, 0.98); backdrop-filter: blur(16px); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 14px; z-index: 100; opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.95); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); max-height: 250px; overflow-y: auto;">
+                            <div class="custom-select-option {{ !request('difficulty') ? 'selected' : '' }}" onclick="selectCustomOption('difficulty', '', 'All Levels', event)">
+                                All Levels
+                            </div>
+                            @foreach($difficulties as $diff)
+                                <div class="custom-select-option {{ request('difficulty') == $diff ? 'selected' : '' }}" onclick="selectCustomOption('difficulty', '{{ $diff }}', '{{ $diff }}', event)">
+                                    {{ $diff }}
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
@@ -192,11 +278,13 @@
                     </div>
 
                     <div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px;">
-                        <a href="{{ route('exercises.show', $exercise->id) }}" class="btn-outline" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.03); text-decoration: none;">
+                        <a href="{{ route('exercises.show', $exercise->id) }}" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8); text-decoration: none; transition: all 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.color='rgba(255,255,255,0.8)'; this.style.borderColor='rgba(255,255,255,0.1)'">
                             <i data-lucide="info" style="width: 18px; height: 18px; margin-right: 10px;"></i> View Guide
                         </a>
                         <button onclick="openWorkoutModal('{{ (string)$exercise->id }}')" 
-                                class="btn-premium" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; padding: 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
+                                style="width: 100%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; padding: 14px; border-radius: 14px; border: 1px solid transparent; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);"
+                                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(139, 92, 246, 0.5)'"
+                                onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(139, 92, 246, 0.3)'">
                             <i data-lucide="plus" style="width: 18px; height: 18px; margin-right: 10px;"></i> Add to Workout
                         </button>
                     </div>
@@ -271,8 +359,8 @@
                 </div>
             </div>
             <div class="modal-footer" style="padding: 1.5rem; display: flex; gap: 12px;">
-                <button type="button" onclick="closeCustomExerciseModal()" class="btn-outline" style="flex: 1; padding: 14px; border-radius: 14px; justify-content: center;">Cancel</button>
-                <button type="submit" class="btn-premium" style="flex: 2; padding: 14px; border-radius: 14px; justify-content: center; font-weight: 800;">Save Exercise</button>
+                <button type="button" onclick="closeCustomExerciseModal()" style="flex: 1; padding: 14px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.7); cursor: pointer; font-size: 0.9rem; font-weight: 700; transition: all 0.3s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.color='#fff'" onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'; this.style.color='rgba(255, 255, 255, 0.7)'">Cancel</button>
+                <button type="submit" style="flex: 2; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; cursor: pointer; font-size: 0.9rem; font-weight: 800; transition: all 0.3s; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(139, 92, 246, 0.5)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(139, 92, 246, 0.3)'">Save Exercise</button>
             </div>
         </form>
     </div>
@@ -298,15 +386,9 @@
             {{-- Step 1: Client List (Trainer Only) --}}
             <div id="clientListStep" style="display: none; flex-direction: column; gap: 10px;">
                 <label style="font-size: 0.7rem; font-weight: 800; color: rgba(196,181,253,0.5); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 5px;">Select Client</label>
-                @foreach($clients ?? [] as $client)
-                    <button onclick="selectClient('{{ (string)$client->_id }}', '{{ $client->name }}')" class="btn-outline" style="justify-content: space-between; padding: 14px 18px; border-radius: 16px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 32px; height: 32px; background: rgba(139,92,246,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #c4b5fd;">{{ substr($client->name, 0, 1) }}</div>
-                            <span style="font-weight: 700;">{{ $client->name }}</span>
-                        </div>
-                        <i data-lucide="chevron-right" style="width: 18px; height: 18px; opacity: 0.3;"></i>
-                    </button>
-                @endforeach
+                <div id="clientListItems" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: rgba(255,255,255,0.4); text-align: center; font-size: 0.85rem; padding: 1rem;">Loading clients...</p>
+                </div>
             </div>
 
             {{-- Step 2: Workout List --}}
@@ -356,10 +438,46 @@
         document.body.style.overflow = 'hidden';
         
         if (userRole === 'trainer') {
+            fetchClients();
             showClientStep();
         } else {
             selectClient(currentUserId, 'My Plans');
         }
+    }
+
+    function fetchClients() {
+        const container = document.getElementById('clientListItems');
+        container.innerHTML = '<p style="color: rgba(255,255,255,0.4); text-align: center; padding: 1rem;">Loading clients...</p>';
+        
+        fetch('/trainer/clients-api')
+            .then(res => res.json())
+            .then(clients => {
+                container.innerHTML = '';
+                if (clients.length === 0) {
+                    container.innerHTML = '<p style="color: rgba(255,255,255,0.4); text-align: center; padding: 1rem;">No confirmed clients found.</p>';
+                }
+                clients.forEach(client => {
+                    const btn = document.createElement('button');
+                    btn.className = 'favorite-btn';
+                    btn.style = 'display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 16px; width: 100%; margin-bottom: 8px; border: 1px solid rgba(139, 92, 246, 0.2); background: rgba(139, 92, 246, 0.05); color: #fff; cursor: pointer; transition: all 0.3s;';
+                    btn.onmouseover = () => { btn.style.background = 'rgba(139, 92, 246, 0.15)'; btn.style.borderColor = 'rgba(139, 92, 246, 0.4)'; };
+                    btn.onmouseout = () => { btn.style.background = 'rgba(139, 92, 246, 0.05)'; btn.style.borderColor = 'rgba(139, 92, 246, 0.2)'; };
+                    btn.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 32px; height: 32px; background: rgba(139,92,246,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #c4b5fd;">${client.name.charAt(0)}</div>
+                            <span style="font-weight: 700;">${client.name}</span>
+                        </div>
+                        <i data-lucide="chevron-right" style="width: 18px; height: 18px; opacity: 0.3;"></i>
+                    `;
+                    btn.onclick = () => selectClient(client.id, client.name);
+                    container.appendChild(btn);
+                });
+                lucide.createIcons();
+            })
+            .catch(error => {
+                console.error(error);
+                container.innerHTML = '<p style="color: rgba(255,255,255,0.4); text-align: center; padding: 1rem;">❌ Error loading clients.</p>';
+            });
     }
 
     function closeWorkoutModal() {
@@ -389,12 +507,20 @@
         }
 
         fetch(`/exercises/user-workouts/${userId}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Failed to fetch workouts');
-                return response.json();
-            })
+            .then(response => response.json())
             .then(workouts => {
                 document.getElementById('modalLoading').style.display = 'none';
+                
+                if (workouts.error) {
+                    alert('❌ Error: ' + workouts.error);
+                    if (userRole === 'trainer') {
+                        showClientStep();
+                    } else {
+                        closeWorkoutModal();
+                    }
+                    return;
+                }
+
                 document.getElementById('workoutListStep').style.display = 'flex';
                 
                 const container = document.getElementById('workoutItems');
@@ -406,10 +532,12 @@
                     document.getElementById('noWorkoutsMsg').style.display = 'none';
                     workouts.forEach(workout => {
                         const btn = document.createElement('button');
-                        btn.className = 'btn-outline';
-                        btn.style = 'justify-content: space-between; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; width: 100%; text-align: left;';
+                        btn.className = 'favorite-btn';
+                        btn.style = 'display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; width: 100%; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: #fff; cursor: pointer; transition: all 0.3s;';
+                        btn.onmouseover = () => { btn.style.background = 'rgba(255, 255, 255, 0.08)'; btn.style.borderColor = 'rgba(255, 255, 255, 0.2)'; };
+                        btn.onmouseout = () => { btn.style.background = 'rgba(255, 255, 255, 0.03)'; btn.style.borderColor = 'rgba(255, 255, 255, 0.1)'; };
                         btn.innerHTML = `
-                            <div>
+                            <div style="text-align: left;">
                                 <div style="font-weight: 700; color: #fff;">${workout.title}</div>
                                 <div style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">${new Date(workout.scheduled_date).toLocaleDateString()}</div>
                             </div>
@@ -425,7 +553,11 @@
                 console.error(error);
                 document.getElementById('modalLoading').style.display = 'none';
                 alert('❌ Error fetching workout plans. Please try again.');
-                showClientStep();
+                if (userRole === 'trainer') {
+                    showClientStep();
+                } else {
+                    closeWorkoutModal();
+                }
             });
     }
 
@@ -453,23 +585,20 @@
 
     function toggleFavorite(btn, exerciseId) {
         let favorites = JSON.parse(localStorage.getItem('vg_favorites') || '[]');
-        const icon = btn.querySelector('i');
         
         if (favorites.includes(exerciseId)) {
             favorites = favorites.filter(id => id !== exerciseId);
             btn.style.color = '#fff';
             btn.style.background = 'rgba(0,0,0,0.5)';
-            icon.setAttribute('data-lucide', 'bookmark');
+            btn.classList.remove('is-favorite');
         } else {
             favorites.push(exerciseId);
             btn.style.color = '#fbbf24';
             btn.style.background = 'rgba(251,191,36,0.15)';
-            icon.setAttribute('data-lucide', 'bookmark');
             btn.classList.add('is-favorite');
         }
         
         localStorage.setItem('vg_favorites', JSON.stringify(favorites));
-        lucide.createIcons();
         
         if (showSavedOnly) filterSaved(document.getElementById('savedFilterBtn'), true);
     }
@@ -478,8 +607,17 @@
         if (!refreshOnly) {
             showSavedOnly = !showSavedOnly;
             btn.classList.toggle('active-filter');
-            btn.style.background = showSavedOnly ? 'rgba(139,92,246,0.2)' : 'transparent';
-            btn.style.borderColor = showSavedOnly ? 'rgba(139,92,246,0.4)' : 'rgba(255,255,255,0.1)';
+            btn.style.color = showSavedOnly ? '#fbbf24' : '#fff';
+            btn.style.background = showSavedOnly ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)';
+            btn.style.borderColor = showSavedOnly ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.1)';
+            const icon = btn.querySelector('i') || btn.querySelector('svg');
+            if (icon) {
+                if (showSavedOnly) {
+                    icon.style.fill = '#fbbf24';
+                } else {
+                    icon.style.fill = 'none';
+                }
+            }
         }
 
         const favorites = JSON.parse(localStorage.getItem('vg_favorites') || '[]');
@@ -522,6 +660,35 @@
         }
     }
 
+    function toggleCustomDropdown(type, event) {
+        event.stopPropagation();
+        const container = document.getElementById(type + '_container');
+        const options = document.getElementById(type + '_options');
+        const isAlreadyActive = container.classList.contains('active');
+        
+        // Collapse all other dropdowns
+        document.querySelectorAll('.custom-select-container').forEach(c => {
+            c.classList.remove('active');
+        });
+        document.querySelectorAll('.custom-select-options').forEach(o => {
+            o.classList.remove('show');
+        });
+        
+        if (!isAlreadyActive) {
+            container.classList.add('active');
+            options.classList.add('show');
+        }
+    }
+
+    function selectCustomOption(type, value, label, event) {
+        event.stopPropagation();
+        const select = document.getElementById(type + '_select');
+        select.value = value;
+        
+        // Submit the form immediately to apply filter!
+        document.getElementById('filterForm').submit();
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const favorites = JSON.parse(localStorage.getItem('vg_favorites') || '[]');
         document.querySelectorAll('.exercise-card').forEach(card => {
@@ -532,6 +699,16 @@
                 btn.style.background = 'rgba(251,191,36,0.15)';
                 btn.classList.add('is-favorite');
             }
+        });
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.custom-select-container').forEach(c => {
+                c.classList.remove('active');
+            });
+            document.querySelectorAll('.custom-select-options').forEach(o => {
+                o.classList.remove('show');
+            });
         });
     });
 </script>
@@ -547,8 +724,10 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    .favorite-btn.is-favorite i {
-        fill: #fbbf24;
+    .favorite-btn.is-favorite i,
+    .favorite-btn.is-favorite svg {
+        fill: #fbbf24 !important;
+        color: #fbbf24 !important;
     }
     .modal-overlay {
         position: fixed;

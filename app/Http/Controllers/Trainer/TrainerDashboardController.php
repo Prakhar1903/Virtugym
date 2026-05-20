@@ -21,6 +21,7 @@ class TrainerDashboardController extends Controller
         
         // Upcoming bookings for the card
         $upcomingBookings = Booking::where('trainer_id', $trainer->id)
+            ->where('status', 'confirmed')
             ->where('session_date', '>', $now)
             ->with('trainee')
             ->orderBy('session_date', 'asc')
@@ -75,6 +76,7 @@ class TrainerDashboardController extends Controller
 
         // Today's Schedule
         $todaysSchedule = Booking::where('trainer_id', $trainer->id)
+            ->where('status', 'confirmed')
             ->whereBetween('session_date', [$todayStart, $todayEnd])
             ->with('trainee')
             ->orderBy('session_date', 'asc')
@@ -138,8 +140,9 @@ class TrainerDashboardController extends Controller
     {
         $clientIds = Booking::where('trainer_id', Auth::id())
             ->whereIn('status', ['confirmed', 'completed', 'active'])
-            ->distinct('trainee_id')
-            ->pluck('trainee_id');
+            ->pluck('trainee_id')
+            ->filter()
+            ->unique();
 
         $clients = User::whereIn('_id', $clientIds)
             ->get(['_id', 'name'])
@@ -156,6 +159,7 @@ class TrainerDashboardController extends Controller
     public function schedule()
     {
         $bookings = Booking::where('trainer_id', Auth::id())
+            ->where('status', 'confirmed')
             ->where('session_date', '>', now())
             ->with('trainee')
             ->orderBy('session_date', 'asc')

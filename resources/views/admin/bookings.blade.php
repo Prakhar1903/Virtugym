@@ -51,8 +51,9 @@
                                 @if($booking->status == 'confirmed') bg-green-900/50 text-green-300
                                 @elseif($booking->status == 'completed') bg-blue-900/50 text-blue-300
                                 @elseif($booking->status == 'cancelled') bg-red-900/50 text-red-300
+                                @elseif($booking->status == 'no_show') bg-orange-900/50 text-orange-300
                                 @else bg-gray-700 text-gray-300 @endif">
-                            {{ ucfirst($booking->status ?? 'pending') }}
+                            {{ $booking->status == 'no_show' ? 'No Show' : ucfirst($booking->status ?? 'pending') }}
                         </span>
                     </td>
                     <td class="px-6 py-3 text-sm">

@@ -77,14 +77,33 @@ class ChatController extends Controller
         
         $request->validate([
             'receiver_id' => 'required',
-            'message' => 'required|string|max:1000'
+            'message' => 'nullable|string|max:1000',
+            'attachment' => 'nullable|file|max:10240'
         ]);
+        
+        if (!$request->message && !$request->hasFile('attachment')) {
+            return response()->json(['error' => 'Message or attachment is required'], 422);
+        }
+
+        $attachmentPath = null;
+        $attachmentName = null;
+        $attachmentType = null;
+
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $attachmentPath = $file->store('attachments', 'public');
+            $attachmentName = $file->getClientOriginalName();
+            $attachmentType = $file->getClientMimeType();
+        }
         
         $message = Message::create([
             'sender_id' => Auth::id(),
             'receiver_id' => $request->receiver_id,
-            'message' => $request->message,
-            'is_read' => false
+            'message' => $request->message ?? '',
+            'is_read' => false,
+            'attachment_path' => $attachmentPath,
+            'attachment_name' => $attachmentName,
+            'attachment_type' => $attachmentType,
         ]);
         
         return response()->json([

@@ -15,17 +15,18 @@ class User extends Authenticatable
     
     protected $fillable = [
         'name', 'email', 'password', 'role',  // Add role field
-        'age', 'gender', 'weight', 'height',
+        'age', 'gender', 'weight', 'height', 'dob',
         'fitness_level', 'goal', 'equipment', 
         'workout_days', 'workout_duration', 'injuries',
         // Trainer specific fields
         'bio', 'experience_years', 'specialization', 'hourly_rate', 
         'certifications', 'is_verified', 'rating', 'total_clients',
+        'profile_photo', 'languages', 'session_types', 'portfolio_link',
         // Payment fields
         'razorpay_id', 'stripe_id', 'upi_id',
         'activity_visit_dates',
         // Goal tracking
-        'target_weight', 'target_body_fat'
+        'target_weight', 'target_body_fat', 'daily_water_goal'
     ];
     
     protected $hidden = [
@@ -36,6 +37,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'equipment' => 'array',
+        'session_types' => 'array',
         'age' => 'integer',
         'weight' => 'float',
         'height' => 'float',
@@ -49,6 +51,8 @@ class User extends Authenticatable
         'activity_visit_dates' => 'array',
         'target_weight' => 'float',
         'target_body_fat' => 'float',
+        'dob' => 'string',
+        'daily_water_goal' => 'integer',
     ];
     
     public function workouts()

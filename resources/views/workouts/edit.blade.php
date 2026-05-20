@@ -71,8 +71,8 @@
             </div>
 
             <div style="display:flex;justify-content:flex-end;gap:1rem;border-top:1px solid rgba(139,92,246,.12);padding-top:1.5rem;">
-                <a href="{{ route('workouts.show', $workout->id) }}" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);padding:12px 24px;border-radius:12px;font-size:.9rem;font-weight:600;text-decoration:none;">Cancel</a>
-                <button type="submit" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(139,92,246,.35);">Save Changes</button>
+                <a href="{{ route('workouts.show', $workout->id) }}" style="background:rgba(255,255,255,.05);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15);padding:12px 24px;border-radius:12px;font-size:.9rem;font-weight:600;text-decoration:none;transition:all .3s ease;" onmouseover="this.style.background='rgba(255,255,255,.1)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,.05)';this.style.color='rgba(255,255,255,.7)'">Cancel</a>
+                <button type="submit" style="background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:.9rem;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(139,92,246,.35);transition:all .3s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 12px 25px rgba(139,92,246,.55)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 8px 20px rgba(139,92,246,.35)'">Save Changes</button>
             </div>
         </form>
     </div>

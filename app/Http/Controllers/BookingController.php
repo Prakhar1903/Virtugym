@@ -323,10 +323,9 @@ class BookingController extends Controller
         $roleField = $isTrainer ? 'trainer_id' : 'trainee_id';
         $withRelation = $isTrainer ? 'trainee' : 'trainer';
 
-        // 1. Upcoming/active bookings.
+        // 1. Upcoming/active bookings (show all active confirmed bookings)
         $upcomingQuery = Booking::where($roleField, $userId)
-            ->where('status', 'confirmed')
-            ->where('session_date', '>=', now()->subHours(3));
+            ->where('status', 'confirmed');
             
         // Apply filter if trainee_id is provided (Trainer-only)
         if ($isTrainer && $request->filled('trainee_id')) {
@@ -337,15 +336,9 @@ class BookingController extends Controller
             ->orderBy('session_date', 'asc')
             ->get();
 
-        // 2. Past Bookings
+        // 2. Past Bookings (show all completed and no_show bookings)
         $pastQuery = Booking::where($roleField, $userId)
-            ->where(function($query) {
-                $query->where('status', 'completed')
-                          ->orWhere(function($q) {
-                              $q->where('status', 'confirmed')
-                                ->where('session_date', '<', now()->subHours(3));
-                          });
-            });
+            ->whereIn('status', ['completed', 'no_show']);
             
         if ($isTrainer && $request->filled('trainee_id')) {
             $pastQuery->where('trainee_id', $request->trainee_id);
@@ -370,20 +363,57 @@ class BookingController extends Controller
         // 4. Summary Metrics
         $totalSpentThisMonth = 0;
         $totalSessionsCompleted = 0;
+        $favouriteTrainerName = '—';
+        $averageSessionDuration = '—';
+        $nextSessionDate = '—';
         $trainerStats = [];
         $uniqueTrainees = collect();
         $todaysSchedule = null;
 
         if (!$isTrainer) {
+            // Spent on completed sessions this month
             $totalSpentThisMonth = Booking::where('trainee_id', $userId)
-                ->whereIn('status', ['confirmed', 'completed'])
+                ->where('status', 'completed')
                 ->where('session_date', '>=', now()->startOfMonth())
                 ->where('session_date', '<=', now()->endOfMonth())
                 ->sum('amount');
                 
+            // Count of completed sessions this month
             $totalSessionsCompleted = Booking::where('trainee_id', $userId)
                 ->where('status', 'completed')
+                ->where('session_date', '>=', now()->startOfMonth())
+                ->where('session_date', '<=', now()->endOfMonth())
                 ->count();
+
+            // Compute Additional stats for trainee
+            $allTraineeBookings = Booking::where('trainee_id', $userId)->get();
+            $completedAndConfirmedBookings = $allTraineeBookings->whereIn('status', ['confirmed', 'completed']);
+            
+            // Favourite Trainer
+            $trainerGroups = $completedAndConfirmedBookings->groupBy('trainer_id');
+            if ($trainerGroups->isNotEmpty()) {
+                $favTrainerId = $trainerGroups->map->count()->sortDesc()->keys()->first();
+                $favTrainerUser = User::find($favTrainerId);
+                if ($favTrainerUser) {
+                    $favouriteTrainerName = $favTrainerUser->name;
+                }
+            }
+            
+            // Average Session Duration
+            $avgDuration = $completedAndConfirmedBookings->avg('duration_minutes');
+            if ($avgDuration > 0) {
+                $averageSessionDuration = round($avgDuration) . ' min';
+            }
+            
+            // Next Session Date (in the future)
+            $nextSession = Booking::where('trainee_id', $userId)
+                ->where('status', 'confirmed')
+                ->where('session_date', '>=', now())
+                ->orderBy('session_date', 'asc')
+                ->first();
+            if ($nextSession) {
+                $nextSessionDate = \Carbon\Carbon::parse($nextSession->session_date)->format('M d, h:i A');
+            }
         } else {
             // Stats for Trainer
             $startOfWeek = now()->startOfWeek();
@@ -429,13 +459,11 @@ class BookingController extends Controller
         return view('bookings.index', compact(
             'upcomingBookings', 'pastBookings', 'cancelledBookings',
             'totalSpentThisMonth', 'totalSessionsCompleted', 'isTrainer',
-            'trainerStats', 'uniqueTrainees', 'todaysSchedule'
+            'trainerStats', 'uniqueTrainees', 'todaysSchedule',
+            'favouriteTrainerName', 'averageSessionDuration', 'nextSessionDate'
         ));
     }
     
-    /**
-     * Mark multiple bookings as completed
-     */
     public function bulkComplete(Request $request)
     {
         if (!Auth::check() || Auth::user()->role !== 'trainer') {
@@ -447,15 +475,39 @@ class BookingController extends Controller
             'booking_ids.*' => 'string'
         ]);
         
-        $count = Booking::where('trainer_id', Auth::id())
+        $bookings = Booking::where('trainer_id', Auth::id())
             ->whereIn('_id', $request->booking_ids)
             ->where('status', 'confirmed')
+            ->get();
+
+        $now = now();
+        $toCompleteIds = [];
+        $futureCount = 0;
+
+        foreach ($bookings as $booking) {
+            if (\Carbon\Carbon::parse($booking->session_date)->isFuture()) {
+                $futureCount++;
+            } else {
+                $toCompleteIds[] = $booking->id;
+            }
+        }
+
+        if (empty($toCompleteIds)) {
+            return redirect()->back()->with('error', 'None of the selected sessions can be marked as completed because they are all in the future.');
+        }
+
+        $count = Booking::whereIn('_id', $toCompleteIds)
             ->update([
                 'status' => 'completed',
-                'completed_at' => now()
+                'completed_at' => $now
             ]);
             
-        return redirect()->back()->with('success', "Successfully marked {$count} sessions as completed!");
+        $message = "Successfully marked {$count} sessions as completed!";
+        if ($futureCount > 0) {
+            $message .= " ({$futureCount} future sessions were skipped.)";
+        }
+            
+        return redirect()->back()->with('success', $message);
     }
     
     /**
@@ -507,8 +559,13 @@ class BookingController extends Controller
             return redirect()->back()->with('error', 'This booking is already cancelled.');
         }
 
-        if ($request->status === 'completed' && !$isTrainer) {
-            abort(403, 'Only trainers can mark sessions as completed.');
+        if ($request->status === 'completed') {
+            if (!$isTrainer) {
+                abort(403, 'Only trainers can mark sessions as completed.');
+            }
+            if (\Carbon\Carbon::parse($booking->session_date)->isFuture()) {
+                return redirect()->back()->with('error', 'You cannot mark a future session as completed.');
+            }
         }
 
         if ($request->status === 'cancelled' && !$isTrainer) {

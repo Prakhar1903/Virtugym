@@ -51,8 +51,29 @@ class WorkoutController extends Controller
                 ->whereNull('completed_at')
                 ->orderBy('scheduled_date', 'asc')
                 ->first();
+
+            // Get all workouts associated with the trainee (assigned or custom) for stats
+            $allWorkouts = Workout::where(function($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('trainee_id', $user->id);
+            })->get();
+
+            $totalWorkouts = $allWorkouts->count();
+            $completedCount = $allWorkouts->whereNotNull('completed_at')->count();
+            $avgDuration = round($allWorkouts->avg('duration_minutes') ?? 45);
+            $activePlansCount = $allWorkouts->whereNull('completed_at')->count();
             
-            return view('workouts.index', compact('assignedWorkouts', 'customWorkouts', 'exercises', 'nextWorkout'));
+            return view('workouts.index', compact(
+                'assignedWorkouts', 
+                'customWorkouts', 
+                'exercises', 
+                'nextWorkout', 
+                'clients',
+                'totalWorkouts',
+                'completedCount',
+                'avgDuration',
+                'activePlansCount'
+            ));
         }
     }
     
@@ -159,6 +180,11 @@ class WorkoutController extends Controller
         // Allow edit if trainer created it or trainee owns it (for self-created workouts)
         if (($user->role === 'trainer' && (string) $workout->trainer_id === (string) $user->id) || 
             ($user->role === 'trainee' && (string) $workout->user_id === (string) $user->id && !$workout->assigned_by)) {
+            
+            if ($workout->completed_at && $user->role === 'trainer') {
+                return redirect()->route('workouts.index')->with('error', 'Completed workouts cannot be edited by trainers.');
+            }
+
             $exercises = Exercise::orderBy('name')->get();
             return view('workouts.edit', compact('workout', 'exercises'));
         }
@@ -174,6 +200,10 @@ class WorkoutController extends Controller
         // Allow update if trainer created it or trainee owns it (for self-created workouts)
         if (($user->role === 'trainer' && (string) $workout->trainer_id === (string) $user->id) || 
             ($user->role === 'trainee' && (string) $workout->user_id === (string) $user->id && !$workout->assigned_by)) {
+            
+            if ($workout->completed_at && $user->role === 'trainer') {
+                return redirect()->route('workouts.index')->with('error', 'Completed workouts cannot be edited by trainers.');
+            }
             
             $request->validate([
                 'title' => 'required|string|max:255',
@@ -215,10 +245,49 @@ class WorkoutController extends Controller
     {
         // Trainee completes the workout
         $workout = Workout::where('user_id', Auth::id())->findOrFail($id);
+
+        $totalReps = 0;
+
+        if (is_array($workout->exercises)) {
+            foreach ($workout->exercises as $exerciseData) {
+                $sets = (int) ($exerciseData['sets'] ?? 1);
+                $repsPerSet = (int) ($exerciseData['reps'] ?? 0);
+                $targetWeight = (float) ($exerciseData['target_weight'] ?? 0);
+
+                $repsArray = array_fill(0, $sets, $repsPerSet);
+                $weightArray = array_fill(0, $sets, $targetWeight);
+
+                $exerciseId = $exerciseData['exercise_id'] ?? null;
+                $exerciseName = 'Exercise';
+                if ($exerciseId) {
+                    $exercise = Exercise::find($exerciseId);
+                    if ($exercise) {
+                        $exerciseName = $exercise->name;
+                    }
+                }
+
+                ExerciseLog::create([
+                    'user_id' => Auth::id(),
+                    'workout_id' => $workout->id,
+                    'exercise_id' => $exerciseId,
+                    'exercise_name' => $exerciseName,
+                    'sets' => $sets,
+                    'reps' => $repsArray,
+                    'weight' => $weightArray,
+                    'notes' => $request->notes,
+                    'rpe' => (int) ($request->rating ?? 7),
+                    'is_pr' => false,
+                ]);
+
+                $totalReps += ($sets * $repsPerSet);
+            }
+        }
+
         $workout->update([
             'completed_at' => now(),
             'notes' => $request->notes,
             'rating' => $request->rating,
+            'total_reps' => $totalReps,
         ]);
         
         return redirect()->route('workouts.show', $workout->id)
@@ -236,10 +305,10 @@ class WorkoutController extends Controller
                 'difficulty' => 'Intermediate',
                 'duration_minutes' => 65,
                 'exercises' => [
-                    ['name' => 'Bench Press', 'sets' => 4, 'reps' => 10],
-                    ['name' => 'Shoulder Press', 'sets' => 3, 'reps' => 12],
+                    ['name' => 'Barbell Bench Press', 'sets' => 4, 'reps' => 10],
+                    ['name' => 'Overhead Press', 'sets' => 3, 'reps' => 12],
                     ['name' => 'Lateral Raises', 'sets' => 3, 'reps' => 15],
-                    ['name' => 'Triceps Pushdowns', 'sets' => 3, 'reps' => 12],
+                    ['name' => 'Tricep Pushdowns', 'sets' => 3, 'reps' => 12],
                 ]
             ],
             'Full Body Ignition' => [
@@ -258,9 +327,9 @@ class WorkoutController extends Controller
                 'difficulty' => 'Advanced',
                 'duration_minutes' => 20,
                 'exercises' => [
-                    ['name' => 'Burpees', 'sets' => 4, 'reps' => 20],
-                    ['name' => 'Mountain Climbers', 'sets' => 4, 'reps' => 30],
-                    ['name' => 'Jump Squats', 'sets' => 4, 'reps' => 15],
+                    ['name' => 'Jump Rope', 'sets' => 4, 'reps' => 20],
+                    ['name' => 'Running', 'sets' => 4, 'reps' => 30],
+                    ['name' => 'Cycling', 'sets' => 4, 'reps' => 15],
                 ]
             ],
             'Lower Body Focus' => [
@@ -268,7 +337,7 @@ class WorkoutController extends Controller
                 'difficulty' => 'Intermediate',
                 'duration_minutes' => 55,
                 'exercises' => [
-                    ['name' => 'Deadlifts', 'sets' => 4, 'reps' => 8],
+                    ['name' => 'Deadlift', 'sets' => 4, 'reps' => 8],
                     ['name' => 'Leg Press', 'sets' => 3, 'reps' => 12],
                     ['name' => 'Lunges', 'sets' => 3, 'reps' => 12],
                 ]
@@ -298,9 +367,22 @@ class WorkoutController extends Controller
             return redirect()->back()->with('error', 'No valid exercises found in this template. Please check the exercise library.');
         }
 
+        $isTrainer = $user->role === 'trainer';
+        
+        if ($isTrainer) {
+            $request->validate([
+                'trainee_id' => 'required|exists:users,_id',
+            ]);
+            $traineeId = $request->trainee_id;
+        } else {
+            $traineeId = $user->id;
+        }
+
         $workout = Workout::create([
-            'user_id' => $user->id,
-            'trainee_id' => $user->id,
+            'trainer_id' => $isTrainer ? $user->id : null,
+            'trainee_id' => $traineeId,
+            'user_id' => $traineeId, 
+            'assigned_by' => $isTrainer ? $user->id : null,
             'title' => $templateName,
             'type' => $template['type'],
             'difficulty' => $template['difficulty'],
@@ -309,6 +391,10 @@ class WorkoutController extends Controller
             'scheduled_date' => now(),
         ]);
 
-        return redirect()->route('workouts.index')->with('success', "Template '$templateName' added to your workouts!");
+        $successMessage = $isTrainer 
+            ? "Template '$templateName' assigned successfully to the client!" 
+            : "Template '$templateName' added to your workouts!";
+
+        return redirect()->route('workouts.index')->with('success', $successMessage);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProgressMetric;
+use App\Models\ProgressPhoto;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,15 @@ class ProgressController extends Controller
         $previous = $metrics->skip(1)->first();
         $history = $metrics->reverse()->values();
 
-        return view('progress.index', compact('user', 'metrics', 'latest', 'previous', 'history'));
+        // Retrieve database-backed progress photos
+        $photos = ProgressPhoto::where('user_id', $user->id)
+            ->orderBy('week_number', 'asc')
+            ->get();
+
+        $firstPhoto = $photos->first();
+        $latestPhoto = $photos->last();
+
+        return view('progress.index', compact('user', 'metrics', 'latest', 'previous', 'history', 'photos', 'firstPhoto', 'latestPhoto'));
     }
 
     public function store(Request $request)
@@ -71,6 +80,15 @@ class ProgressController extends Controller
         if ($request->hasFile('progress_photo')) {
             $path = $request->file('progress_photo')->store('progress_photos', 'public');
             $validated['progress_photo'] = $path;
+
+            // Auto-calculate week number and save database-backed progress photo
+            $week = ProgressPhoto::where('user_id', $user->id)->count() + 1;
+            ProgressPhoto::create([
+                'user_id' => $user->id,
+                'photo' => $path,
+                'weight' => $weight,
+                'week_number' => $week,
+            ]);
         }
 
         $metricDate = Carbon::parse($validated['date'])->startOfDay();

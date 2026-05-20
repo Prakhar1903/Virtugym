@@ -16,7 +16,7 @@ class MindfulnessController extends Controller
         }
         
         $contents = $query->get();
-        $categories = MindfulnessContent::distinct('category')->get();
+        $categories = collect(MindfulnessContent::raw()->distinct('category'))->filter()->values();
         
         return view('mindfulness.index', compact('contents', 'categories'));
     }

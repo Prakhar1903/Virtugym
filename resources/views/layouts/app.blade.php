@@ -123,6 +123,27 @@
             --vg-orb-3: rgba(99,102,241,.06);
         }
         *{font-family:'Inter',sans-serif;box-sizing:border-box;}
+        
+        /* Custom Smooth Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--vg-gradient);
+            border-radius: 9999px;
+            border: 2px solid var(--vg-bg);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            opacity: 0.8;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--vg-accent) var(--vg-bg);
+        }
 
         body {
             background: var(--vg-bg);
@@ -251,7 +272,7 @@
         .theme-choice.active {
             transform: translateY(-2px);
             border-color: var(--vg-border-strong);
-            box-shadow: 0 8px 20px var(--vg-accent-glow), inset 0 0 0 3px rgba(255,255,255,.12);
+            box-shadow: 0 4px 10px var(--vg-accent-glow), inset 0 0 0 2px rgba(255,255,255,.08);
         }
         .theme-choice[data-theme-choice="aurora"] { background: linear-gradient(135deg,#8b5cf6,#ec4899); }
         .theme-choice[data-theme-choice="ember"] { background: linear-gradient(135deg,#f97316,#e11d48); }
@@ -259,17 +280,25 @@
         .theme-choice[data-theme-choice="forest"] { background: linear-gradient(135deg,#22c55e,#84cc16); }
         .theme-choice[data-theme-choice="graphite"] { background: linear-gradient(135deg,#94a3b8,#38bdf8); }
         .appearance-panel {
-            background: linear-gradient(135deg, var(--vg-accent-soft), rgba(255,255,255,.025));
-            border: 1px solid var(--vg-border);
+            background: rgba(255,255,255,.005);
+            border: 1px solid rgba(255,255,255,.02);
             border-radius: 16px;
             padding: 14px;
+            opacity: 0.35;
+            transition: opacity 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+        }
+        .appearance-panel:hover {
+            opacity: 0.9;
+            background: rgba(255,255,255,.02);
+            border-color: rgba(255,255,255,.08);
         }
         .appearance-title {
-            color: var(--vg-text-strong);
-            font-size: .78rem;
+            color: var(--vg-text-muted);
+            font-size: .7rem;
             font-weight: 800;
-            letter-spacing: .06em;
+            letter-spacing: .08em;
             margin-bottom: 10px;
+            opacity: 0.65;
         }
         .theme-list {
             display: grid;
@@ -281,21 +310,27 @@
             align-items: center;
             gap: 9px;
             width: 100%;
-            background: rgba(255,255,255,.04);
+            background: rgba(255,255,255,.01);
             border: 1px solid transparent;
             color: var(--vg-text-muted);
             border-radius: 10px;
             padding: 7px 9px;
             cursor: pointer;
-            font-size: .78rem;
+            font-size: .75rem;
             font-weight: 700;
             transition: all .2s ease;
+            opacity: 0.65;
         }
-        .theme-row:hover,
-        .theme-row.active {
-            background: var(--vg-accent-soft);
-            border-color: var(--vg-border-strong);
+        .theme-row:hover {
+            background: rgba(255,255,255,.04);
             color: var(--vg-text-strong);
+            opacity: 0.95;
+        }
+        .theme-row.active {
+            background: rgba(255,255,255,.08);
+            border-color: rgba(255,255,255,.1);
+            color: var(--vg-text-strong);
+            opacity: 1;
         }
         .theme-dot {
             width: 14px;
@@ -328,6 +363,37 @@
         .sidebar::-webkit-scrollbar{width:4px;}
         .sidebar::-webkit-scrollbar-thumb{background:var(--vg-gradient);border-radius:4px;}
 
+        /* Prevent logo clipping and align sidebar properly */
+        .logo-v2 {
+            padding: 20px 20px 16px !important;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--vg-border) !important;
+        }
+        .logo-text-v2 {
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            letter-spacing: .05em !important;
+            background: linear-gradient(135deg, #ffffff 20%, var(--vg-accent) 60%, var(--vg-accent-2) 90%) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            color: transparent !important;
+        }
+        .logo-icon-v2 {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 9px !important;
+            background: var(--vg-gradient) !important;
+            box-shadow: 0 0 12px var(--vg-accent-glow) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+
         .sidebar-item {
             display: flex;
             align-items: center;
@@ -351,8 +417,8 @@
         .sidebar-item.active {
             background: linear-gradient(135deg, var(--vg-accent-soft), rgba(255,255,255,.04));
             color: var(--vg-text-strong);
-            border: 1px solid var(--vg-border-strong);
-            box-shadow: 0 4px 16px var(--vg-accent-glow);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
         .sidebar-item .s-icon {
             font-size: 1.2rem;
@@ -538,11 +604,58 @@
             color: var(--vg-text-muted) !important;
         }
         html[data-theme] input,
-        html[data-theme] textarea,
-        html[data-theme] select {
+        html[data-theme] textarea {
             background-color: rgba(255,255,255,.055) !important;
             border-color: var(--vg-border) !important;
             color: var(--vg-text-strong) !important;
+        }
+        
+        /* Premium dark dropdowns and options */
+        select,
+        html[data-theme] select {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background: #08081a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center !important;
+            background-size: 16px !important;
+            border: 1px solid var(--vg-border) !important;
+            color: var(--vg-text-strong) !important;
+            border-radius: 12px;
+            padding: 10px 40px 10px 16px !important;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        select:focus,
+        html[data-theme] select:focus {
+            border-color: var(--vg-accent) !important;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+            background-color: #0c0c26 !important;
+        }
+
+        /* Specific for form-input select overrides */
+        .form-input select,
+        select.form-input,
+        html[data-theme] select.form-input {
+            background: rgba(255, 255, 255, 0.04) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center !important;
+            background-size: 16px !important;
+            padding: 12px 40px 12px 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .form-input select:focus,
+        select.form-input:focus,
+        html[data-theme] select.form-input:focus {
+            border-color: var(--vg-accent) !important;
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        select option,
+        html[data-theme] select option {
+            background-color: #08081a !important;
+            color: #ffffff !important;
+            padding: 14px !important;
         }
         html[data-theme] input::placeholder,
         html[data-theme] textarea::placeholder {
@@ -551,11 +664,100 @@
     </style>
 </head>
 <body>
+    <!-- Top Progress Bar -->
+    <div id="top-loading-bar" style="position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, #8b5cf6, #ec4899); z-index: 99999; width: 0%; transition: width 0.4s ease, opacity 0.4s ease; opacity: 0; pointer-events: none;"></div>
+
+    <!-- Global Toast Notifications Container -->
+    <div id="global-toast-container" style="position: fixed; top: 80px; right: 24px; display: flex; flex-direction: column; gap: 12px; z-index: 10000; pointer-events: none;"></div>
+
+    <script>
+    (function() {
+        // Global Toast System
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('global-toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.style.pointerEvents = 'auto';
+            toast.style.background = 'rgba(15, 23, 42, 0.9)';
+            toast.style.backdropFilter = 'blur(12px)';
+            toast.style.webkitBackdropFilter = 'blur(12px)';
+            toast.style.border = '1px solid rgba(139, 92, 246, 0.3)';
+            toast.style.borderRadius = '16px';
+            toast.style.padding = '14px 20px';
+            toast.style.color = '#fff';
+            toast.style.fontSize = '0.9rem';
+            toast.style.fontWeight = '600';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '12px';
+            toast.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(139, 92, 246, 0.15)';
+            toast.style.transform = 'translateX(50px)';
+            toast.style.opacity = '0';
+            toast.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            toast.style.minWidth = '320px';
+            toast.style.maxWidth = '450px';
+
+            let icon = 'ℹ️';
+            if (message.includes('✨') || message.toLowerCase().includes('success') || message.toLowerCase().includes('added') || message.toLowerCase().includes('completed') || message.includes('✓')) {
+                icon = '✨';
+                toast.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+                toast.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15)';
+            } else if (message.includes('❌') || message.toLowerCase().includes('error') || message.toLowerCase().includes('failed') || message.toLowerCase().includes('could not')) {
+                icon = '❌';
+                toast.style.border = '1px solid rgba(244, 63, 94, 0.35)';
+                toast.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(244, 63, 94, 0.15)';
+            } else if (message.includes('⚠️') || message.toLowerCase().includes('warning') || message.toLowerCase().includes('sure')) {
+                icon = '⚠️';
+                toast.style.border = '1px solid rgba(245, 158, 11, 0.35)';
+                toast.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.15)';
+            }
+
+            let cleanMessage = message;
+            const emojiPrefixes = ['✨', '❌', '⚠️', 'ℹ️', '✓'];
+            for (const prefix of emojiPrefixes) {
+                if (cleanMessage.startsWith(prefix)) {
+                    cleanMessage = cleanMessage.substring(prefix.length).trim();
+                    break;
+                }
+            }
+
+            toast.innerHTML = `
+                <span style="font-size: 1.25rem; flex-shrink: 0;">${icon}</span>
+                <span style="flex: 1; line-height: 1.4;">${cleanMessage}</span>
+                <button type="button" onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; opacity: 0.5; font-size: 0.85rem; color: #fff; padding: 2px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">✕</button>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+                toast.style.opacity = '1';
+            }, 50);
+
+            setTimeout(() => {
+                toast.style.transform = 'translateX(50px)';
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.remove();
+                }, 400);
+            }, 4500);
+        };
+
+        // Override standard browser alert
+        window.alert = function(msg) {
+            window.showToast(msg);
+        };
+    })();
+    </script>
+
     <canvas id="stars"></canvas>
     <div class="orb o1"></div>
     <div class="orb o2"></div>
     <div class="orb o3"></div>
+    @if(Auth::user()->role === 'trainee')
     <div id="youtubeBackgroundPlayer" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;" aria-hidden="true"></div>
+    @endif
 
     <!-- NAVBAR -->
     <nav class="nav-dark">
@@ -578,15 +780,31 @@
             </form>
 
             <div style="display:flex;align-items:center;gap:1.2rem;">
+                @if(Auth::user()->role === 'trainee')
                 <button type="button" id="musicToggle" class="music-toggle" title="Toggle background music" aria-label="Toggle background music">
                     <i data-lucide="music" class="w-4 h-4"></i>
                 </button>
+                @endif
                 
                 <!-- Notification Bell -->
-                <button class="relative text-gray-400 hover:text-white transition focus:outline-none flex items-center justify-center">
-                    <i data-lucide="bell" class="w-5 h-5"></i>
-                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-gray-900">3</span>
-                </button>
+                <div class="relative" id="notificationDropdownContainer">
+                    <button id="notificationBell" class="relative text-gray-400 hover:text-white transition focus:outline-none flex items-center justify-center" aria-label="Notifications" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span id="notificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-gray-900" style="display: none; line-height: 1;">0</span>
+                    </button>
+                    <!-- Glassmorphic Dropdown -->
+                    <div id="notificationDropdown" class="dropdown-menu absolute right-0 mt-3 py-2 w-80 max-h-[400px] overflow-y-auto z-50 hidden" style="border: 1px solid rgba(139,92,246,.15); background: rgba(17,12,28,0.96); backdrop-filter: blur(10px); border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);">
+                        <div class="flex items-center justify-between px-4 py-2 border-b border-gray-800" style="border-bottom: 1px solid rgba(139,92,246,.15); display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: .85rem; font-weight: 700; color: var(--vg-text-strong);">Notifications</span>
+                            <span id="notificationCountText" style="font-size: .72rem; color: var(--vg-text-faint);">0 unread</span>
+                        </div>
+                        <div id="notificationList" class="flex flex-col" style="display: flex; flex-direction: column;">
+                            <div class="px-4 py-6 text-center text-gray-500 text-sm" style="padding: 24px 16px; text-align: center; color: var(--vg-text-faint); font-size: .82rem;">
+                                Loading notifications...
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- User info -->
                 <div class="nav-user-info hidden lg:block text-right border-l border-gray-700/50 pl-4">
@@ -697,13 +915,9 @@
                     <span class="s-icon"><i data-lucide="camera"></i></span>
                     <span>Live Form Check</span>
                 </a>
-
-                <a href="{{ route('music.index') }}" class="sidebar-item {{ request()->routeIs('music.*') ? 'active' : '' }}">
-                    <span class="s-icon"><i data-lucide="music"></i></span>
-                    <span>Workout Music</span>
-                </a>
                 @endif
 
+                @if(Auth::user()->role == 'trainee')
                 <a href="{{ route('water.index') }}" class="sidebar-item {{ request()->routeIs('water.*') ? 'active' : '' }}">
                     <span class="s-icon"><i data-lucide="droplets"></i></span><span>Water Tracker</span>
                 </a>
@@ -711,6 +925,7 @@
                 <a href="{{ route('mindfulness.index') }}" class="sidebar-item {{ request()->routeIs('mindfulness.*') ? 'active' : '' }}">
                     <span class="s-icon"><i data-lucide="leaf"></i></span><span>Mindfulness</span>
                 </a>
+                @endif
 
                 @if(Auth::user()->role == 'trainer')
                 <a href="{{ route('trainer.availability.index') }}" class="sidebar-item {{ request()->routeIs('trainer.availability.*') ? 'active' : '' }}">
@@ -727,6 +942,9 @@
                 @if(Auth::user()->role == 'trainee')
                 <a href="{{ route('bookings.index') }}" class="sidebar-item {{ request()->routeIs('bookings.*') ? 'active' : '' }}">
                     <span class="s-icon"><i data-lucide="calendar-days"></i></span><span>My Sessions</span>
+                </a>
+                <a href="{{ route('music.index') }}" class="sidebar-item {{ request()->routeIs('music.*') ? 'active' : '' }}">
+                    <span class="s-icon"><i data-lucide="music"></i></span><span>Workout Music</span>
                 </a>
                 @endif
                 @endif
@@ -792,7 +1010,7 @@
     (function(){
         const c=document.getElementById('stars'),ctx=c.getContext('2d');let W,H,S=[];
         function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
-        function init(){S=Array.from({length:160},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.1+.2,a:Math.random(),da:(Math.random()-.5)*.005}));}
+        function init(){S=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*0.8+.2,a:Math.random()*0.4,da:(Math.random()-.5)*.003}));}
         let cachedAccent = null;
         let lastTheme = null;
 
@@ -810,7 +1028,7 @@
                     cachedAccent = [196, 181, 253];
                 }
             }
-            return `rgba(${cachedAccent[0]},${cachedAccent[1]},${cachedAccent[2]},${alpha})`;
+            return `rgba(${cachedAccent[0]},${cachedAccent[1]},${cachedAccent[2]},${alpha * 0.25})`;
         }
         function draw(){ctx.clearRect(0,0,W,H);S.forEach(s=>{s.a=Math.max(.05,Math.min(1,s.a+s.da));if(s.a<=.05||s.a>=1)s.da*=-1;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=getAccentColor(s.a);ctx.fill();});requestAnimationFrame(draw);}
         window.addEventListener('resize',()=>{resize();init();});resize();init();draw();
@@ -863,27 +1081,140 @@
         });
     }, 5000);
     
-    // Smooth Page Exit
-    window.addEventListener('beforeunload', () => {
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity 0.25s ease';
-    });
+    // Premium Top Loading Progress Bar
+    (function() {
+        const bar = document.getElementById('top-loading-bar');
+        if (!bar) return;
 
-    // YouTube-backed gym background music. Browsers allow the player to load on
-    // page load, but audible playback still needs the first user gesture.
+        function startLoading() {
+            bar.style.opacity = '1';
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = '70%';
+            }, 50);
+            setTimeout(() => {
+                bar.style.width = '90%';
+            }, 800);
+        }
+
+        // Intercept internal link clicks
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (!link) return;
+
+            const url = link.getAttribute('href');
+            if (!url || url.startsWith('#') || url.startsWith('javascript:') || link.target === '_blank' || e.metaKey || e.ctrlKey) {
+                return;
+            }
+
+            if (link.hostname === window.location.hostname) {
+                startLoading();
+            }
+        });
+
+        // Intercept form submissions
+        document.addEventListener('submit', function(e) {
+            startLoading();
+        });
+
+        // Complete loading on page mount
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                }, 400);
+            }, 200);
+        } else {
+            window.addEventListener('DOMContentLoaded', function() {
+                bar.style.width = '100%';
+                setTimeout(() => {
+                    bar.style.opacity = '0';
+                    setTimeout(() => {
+                        bar.style.width = '0%';
+                    }, 400);
+                }, 200);
+            });
+        }
+    })();
+
+    @if(Auth::user()->role === 'trainee')
+    // ============================================================
+    // PERSISTENT GYM PLAYER ENGINE (Trainee only)
+    // ============================================================
     (function(){
         const toggle = document.getElementById('musicToggle');
-        const STORAGE_KEY = 'virtugym-background-music';
-        const endpoint = @json(route('music.background'));
+        const STORAGE_KEY = 'virtugym-music-enabled';
+        const SONG_KEY = 'virtugym-current-song';
+        const VOLUME_KEY = 'virtugym-music-volume';
+        const HISTORY_KEY = 'virtugym-music-history';
+        const STATE_KEY = 'virtugym-music-playing';
+        const TIME_KEY = 'virtugym-music-time';
+        
+        let timeInterval = null;
+        function startTrackingTime() {
+            if (timeInterval) clearInterval(timeInterval);
+            timeInterval = setInterval(() => {
+                if (player && typeof player.getCurrentTime === 'function' && isPlaying) {
+                    const currentTime = player.getCurrentTime();
+                    localStorage.setItem(TIME_KEY, currentTime.toString());
+                    window.dispatchEvent(new CustomEvent('gym-player-time-update', {
+                        detail: {
+                            currentTime: currentTime,
+                            duration: player.getDuration ? player.getDuration() : 0
+                        }
+                    }));
+                }
+            }, 1000);
+        }
+
+        function stopTrackingTime() {
+            if (timeInterval) {
+                clearInterval(timeInterval);
+                timeInterval = null;
+            }
+        }
+        
         let player = null;
-        let videoId = null;
         let isPlaying = false;
         let enabled = localStorage.getItem(STORAGE_KEY) !== 'off';
+        let currentVolume = parseInt(localStorage.getItem(VOLUME_KEY) || '38');
+        
+        // Initial / Fallback song
+        const defaultSong = {
+            video_id: '83R59AnBY90',
+            title: 'NEFFEX - Grateful [Clean Gym Motivation]',
+            channel: 'NEFFEX Music',
+            thumbnail: 'https://img.youtube.com/vi/83R59AnBY90/0.jpg'
+        };
 
-        function refreshToggle() {
-            toggle?.classList.toggle('playing', enabled && isPlaying);
-            toggle?.setAttribute('aria-pressed', enabled && isPlaying ? 'true' : 'false');
-            toggle?.setAttribute('title', enabled ? 'Background music on' : 'Background music off');
+        function getActiveSong() {
+            try {
+                return JSON.parse(localStorage.getItem(SONG_KEY)) || defaultSong;
+            } catch(e) {
+                return defaultSong;
+            }
+        }
+
+        function setActiveSong(song) {
+            localStorage.setItem(SONG_KEY, JSON.stringify(song));
+            addToHistory(song);
+            updateFloatingPlayerUI();
+            
+            // Dispatch event for active music page to sync
+            window.dispatchEvent(new CustomEvent('gym-song-changed', { detail: song }));
+        }
+
+        function addToHistory(song) {
+            try {
+                let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+                history = history.filter(s => s.video_id !== song.video_id);
+                history.unshift(song);
+                if (history.length > 8) history.pop();
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+                window.dispatchEvent(new CustomEvent('gym-history-updated'));
+            } catch(e) {}
         }
 
         function loadYouTubeApi() {
@@ -905,35 +1236,16 @@
             return window.virtugymYouTubeApiPromise;
         }
 
-        async function getBackgroundVideoId() {
-            if (videoId) return videoId;
-
-            try {
-                const response = await fetch(endpoint, {
-                    headers: { 'Accept': 'application/json' },
-                    credentials: 'same-origin',
-                });
-                const payload = await response.json();
-                videoId = payload?.song?.video_id || null;
-            } catch (error) {
-                videoId = null;
-            }
-
-            return videoId;
-        }
-
         async function createPlayer() {
             if (player) return player;
 
-            const nextVideoId = await getBackgroundVideoId();
-            if (!nextVideoId) return null;
-
+            const song = getActiveSong();
             await loadYouTubeApi();
 
             player = new YT.Player('youtubeBackgroundPlayer', {
                 width: '1',
                 height: '1',
-                videoId: nextVideoId,
+                videoId: song.video_id,
                 playerVars: {
                     autoplay: 0,
                     controls: 0,
@@ -942,26 +1254,33 @@
                     loop: 1,
                     modestbranding: 1,
                     playsinline: 1,
-                    playlist: nextVideoId,
+                    playlist: song.video_id,
                     rel: 0,
                 },
                 events: {
                     onReady: function(event) {
-                        event.target.setVolume(38);
-                        if (enabled) startMusic(false);
+                        event.target.setVolume(currentVolume);
+                        // If it was playing in the previous page, try to resume
+                        if (enabled && localStorage.getItem(STATE_KEY) === 'true') {
+                            startMusic(false);
+                        }
                     },
                     onStateChange: function(event) {
                         if (event.data === YT.PlayerState.PLAYING) {
                             isPlaying = true;
-                            refreshToggle();
+                            localStorage.setItem(STATE_KEY, 'true');
+                            updateStates(true);
+                            startTrackingTime();
                         } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
                             isPlaying = false;
-                            refreshToggle();
+                            localStorage.setItem(STATE_KEY, 'false');
+                            updateStates(false);
+                            stopTrackingTime();
                         }
                     },
                     onError: function() {
                         isPlaying = false;
-                        refreshToggle();
+                        updateStates(false);
                     },
                 },
             });
@@ -977,47 +1296,330 @@
             try {
                 enabled = true;
                 localStorage.setItem(STORAGE_KEY, 'on');
+                localStorage.setItem(STATE_KEY, 'true');
                 nextPlayer.unMute();
-                nextPlayer.setVolume(38);
-                nextPlayer.playVideo();
+                nextPlayer.setVolume(currentVolume);
+                
+                // If the player loaded a different video previously
+                const currentSong = getActiveSong();
+                const playerUrl = nextPlayer.getVideoUrl ? nextPlayer.getVideoUrl() : '';
+                const savedTime = parseFloat(localStorage.getItem(TIME_KEY) || '0');
+                if (playerUrl && !playerUrl.includes(currentSong.video_id)) {
+                    nextPlayer.loadVideoById({
+                        videoId: currentSong.video_id,
+                        startSeconds: savedTime,
+                        suggestedQuality: 'default'
+                    });
+                } else {
+                    if (savedTime > 0) {
+                        nextPlayer.seekTo(savedTime, true);
+                    }
+                    nextPlayer.playVideo();
+                }
+                
                 isPlaying = true;
-                refreshToggle();
+                updateStates(true);
             } catch (error) {
                 isPlaying = false;
-                refreshToggle();
+                updateStates(false);
             }
         }
 
         function stopMusic() {
             isPlaying = false;
+            localStorage.setItem(STATE_KEY, 'false');
             if (player && typeof player.pauseVideo === 'function') {
                 player.pauseVideo();
             }
-            refreshToggle();
+            updateStates(false);
         }
 
-        toggle?.addEventListener('click', function(){
-            if (isPlaying) {
-                enabled = false;
-                localStorage.setItem(STORAGE_KEY, 'off');
-                stopMusic();
-            } else {
+        function updateStates(playing) {
+            toggle?.classList.toggle('playing', enabled && playing);
+            toggle?.setAttribute('aria-pressed', enabled && playing ? 'true' : 'false');
+            
+            const miniWidget = document.getElementById('vg-mini-player');
+            const miniPlayBtn = document.getElementById('vg-mini-play-btn');
+            
+            if (miniWidget) {
+                miniWidget.classList.toggle('visible', true);
+            }
+            if (miniPlayBtn) {
+                miniPlayBtn.innerHTML = playing ? 
+                    `<svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>` :
+                    `<svg style="width:14px;height:14px;fill:currentColor;margin-left:2px;" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+            }
+
+            // Sync visualizer on main music page if present
+            window.dispatchEvent(new CustomEvent('gym-play-state-changed', { detail: { playing } }));
+        }
+
+        // Global control interface
+        window.GymPlayer = {
+            play: async function(song) {
+                const songObj = typeof song === 'string' ? { video_id: song, title: 'Gym Mix', channel: 'VirtuGym', thumbnail: `https://img.youtube.com/vi/${song}/0.jpg` } : song;
+                
+                localStorage.setItem(TIME_KEY, '0');
+                setActiveSong(songObj);
+                
                 enabled = true;
                 localStorage.setItem(STORAGE_KEY, 'on');
-                startMusic(true);
-            }
+                
+                const nextPlayer = await createPlayer();
+                if (nextPlayer && typeof nextPlayer.loadVideoById === 'function') {
+                    nextPlayer.loadVideoById({
+                        videoId: songObj.video_id,
+                        startSeconds: 0,
+                        suggestedQuality: 'default'
+                    });
+                    isPlaying = true;
+                    updateStates(true);
+                }
+            },
+            pause: function() {
+                stopMusic();
+            },
+            toggle: function() {
+                if (isPlaying) {
+                    stopMusic();
+                } else {
+                    startMusic(true);
+                }
+            },
+            setVolume: function(vol) {
+                currentVolume = Math.max(0, Math.min(100, vol));
+                localStorage.setItem(VOLUME_KEY, currentVolume);
+                if (player && typeof player.setVolume === 'function') {
+                    player.setVolume(currentVolume);
+                }
+                const slider = document.getElementById('vg-mini-volume');
+                if (slider) slider.value = currentVolume;
+            },
+            getVolume: function() {
+                return currentVolume;
+            },
+            isPlaying: function() {
+                return isPlaying;
+            },
+            getActiveSong: getActiveSong
+        };
+
+        // UI Setup: Inject Glassmorphic Mini Player
+        const miniPlayerHtml = `
+            <div id="vg-mini-player" style="
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                width: 320px;
+                background: rgba(15, 10, 30, 0.85);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(139, 92, 246, 0.35);
+                border-radius: 20px;
+                padding: 12px 16px;
+                z-index: 9999;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.15);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                transform: translateY(100px);
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                pointer-events: auto;
+            ">
+                <img id="vg-mini-thumb" src="" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 0.65rem; color: #a78bfa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Now Playing</div>
+                    <div id="vg-mini-title" style="font-size: 0.8rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">-</div>
+                    <div id="vg-mini-channel" style="font-size: 0.7rem; color: rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;">-</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button id="vg-mini-play-btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; transition: transform 0.2s;">
+                        <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    <div style="position: relative; display: flex; align-items: center;" onmouseover="document.getElementById('vg-mini-vol-popup').style.opacity='1'" onmouseout="document.getElementById('vg-mini-vol-popup').style.opacity='0'">
+                        <button style="background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;">
+                            <svg style="width:14px;height:14px;fill:currentColor;" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                        </button>
+                        <div id="vg-mini-vol-popup" style="position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); background: rgba(15,10,30,0.95); border: 1px solid rgba(139,92,246,0.3); padding: 8px; border-radius: 8px; opacity: 0; transition: opacity 0.2s; pointer-events: auto;">
+                            <input id="vg-mini-volume" type="range" min="0" max="100" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 8px; height: 60px; background: rgba(255,255,255,0.1); border-radius: 4px; outline: none; cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style>
+                #vg-mini-player.visible {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            </style>
+        `;
+        document.body.insertAdjacentHTML('beforeend', miniPlayerHtml);
+
+        function updateFloatingPlayerUI() {
+            const song = getActiveSong();
+            const thumb = document.getElementById('vg-mini-thumb');
+            const title = document.getElementById('vg-mini-title');
+            const channel = document.getElementById('vg-mini-channel');
+            
+            if (thumb) thumb.src = song.thumbnail || `https://img.youtube.com/vi/${song.video_id}/0.jpg`;
+            if (title) title.textContent = song.title;
+            if (channel) channel.textContent = song.channel;
+        }
+
+        // Event Listeners for Mini Player Controls
+        document.getElementById('vg-mini-play-btn')?.addEventListener('click', () => {
+            window.GymPlayer.toggle();
+        });
+
+        const volSlider = document.getElementById('vg-mini-volume');
+        if (volSlider) {
+            volSlider.value = currentVolume;
+            volSlider.addEventListener('input', (e) => {
+                window.GymPlayer.setVolume(e.target.value);
+            });
+        }
+
+        toggle?.addEventListener('click', function(e){
+            e.stopPropagation();
+            window.GymPlayer.toggle();
         });
 
         function unlockFromGesture(event) {
             if (toggle && event.target && toggle.contains(event.target)) return;
-            startMusic(false);
+            // Only trigger auto-play from gesture if it was already playing in the previous session/page
+            if (localStorage.getItem(STATE_KEY) === 'true') {
+                startMusic(false);
+            }
         }
 
-        refreshToggle();
-        window.addEventListener('load', () => createPlayer());
+        updateFloatingPlayerUI();
+        window.addEventListener('load', () => {
+            createPlayer();
+            // If active song is already set and user previously had playing=true, show widget immediately
+            if (localStorage.getItem(STATE_KEY) === 'true') {
+                document.getElementById('vg-mini-player')?.classList.add('visible');
+            }
+        });
+        
         ['pointerdown', 'keydown', 'touchstart'].forEach(eventName => {
             window.addEventListener(eventName, unlockFromGesture, { passive: true });
         });
+    })();
+    @endif
+    </script>
+
+    <script>
+    (function() {
+        const bellBtn = document.getElementById('notificationBell');
+        const dropdown = document.getElementById('notificationDropdown');
+        const badge = document.getElementById('notificationBadge');
+        const countText = document.getElementById('notificationCountText');
+        const listContainer = document.getElementById('notificationList');
+        const container = document.getElementById('notificationDropdownContainer');
+
+        let notifications = [];
+
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('{{ route('notifications.index') }}');
+                notifications = await response.json();
+                renderNotifications();
+            } catch (error) {
+                console.error('Failed to fetch notifications:', error);
+                listContainer.innerHTML = `
+                    <div style="padding: 24px 16px; text-align: center; color: #f87171; font-size: .82rem;">
+                        ⚠️ Failed to load notifications.
+                    </div>
+                `;
+            }
+        }
+
+        function renderNotifications() {
+            const count = notifications.length;
+            
+            // Update badge
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'flex';
+                countText.textContent = `${count} active`;
+            } else {
+                badge.style.display = 'none';
+                countText.textContent = '0 active';
+            }
+
+            // Render list
+            if (count === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 32px 16px; text-align: center; color: var(--vg-text-faint); font-size: .82rem;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;">✨</div>
+                        All caught up! No notifications.
+                    </div>
+                `;
+                return;
+            }
+
+            const categoryIcons = {
+                booking: '📅',
+                workout: '💪',
+                water: '💧',
+                progress: '📈',
+                admin: '🛡️',
+                profile: '👤'
+            };
+
+            const categoryColors = {
+                success: '#34d399',
+                warning: '#fbbf24',
+                info: '#60a5fa',
+                danger: '#f87171'
+            };
+
+            listContainer.innerHTML = notifications.map(notif => {
+                const icon = categoryIcons[notif.category] || '🔔';
+                const color = categoryColors[notif.type] || 'var(--vg-accent)';
+                return `
+                    <a href="${notif.url}" class="block hover:bg-gray-800/40 transition-colors" style="display: flex; gap: 12px; padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); text-decoration: none; align-items: flex-start;">
+                        <span style="font-size: 1.2rem; min-width: 24px; text-align: center; padding-top: 2px;">${icon}</span>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 2px;">
+                                <h4 style="font-size: .82rem; font-weight: 700; color: var(--vg-text-strong); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${notif.title}</h4>
+                                <span style="font-size: .65rem; color: var(--vg-text-faint); white-space: nowrap;">${notif.time_ago}</span>
+                            </div>
+                            <p style="font-size: .78rem; color: var(--vg-text-muted); margin: 0; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${notif.message}</p>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Toggle dropdown
+        bellBtn?.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                if (menu !== dropdown) menu.classList.add('hidden');
+            });
+
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                fetchNotifications();
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function(e) {
+            if (dropdown && !container.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Initial fetch on load to show count immediately
+        fetchNotifications();
     })();
     </script>
     @stack('modals')
