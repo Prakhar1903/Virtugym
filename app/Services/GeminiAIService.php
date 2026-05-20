@@ -33,7 +33,7 @@ class GeminiAIService
     /**
  * Generate content using Gemini
  */
-private function generate($prompt, $temperature = 0.7, $maxTokens = 800)
+private function generate($prompt, $temperature = 0.7, $maxTokens = 2000)
 {
     // DEBUG: Log API key status
     \Log::info('=== GEMINI API DEBUG ===');
@@ -46,12 +46,12 @@ private function generate($prompt, $temperature = 0.7, $maxTokens = 800)
     }
     
     try {
-        // Try different model names
+        // Try different validated modern model names
         $modelsToTry = [
             $this->model,
-            'gemini-1.0-pro',
-            'gemini-1.0-pro-latest',
-            'gemini-pro'
+            'gemini-2.0-flash',
+            'gemini-flash-latest',
+            'gemini-2.5-pro'
         ];
         
         $lastError = null;
@@ -204,11 +204,56 @@ Make it challenging but achievable. Include circuit training for efficiency.";
         $fitnessLevel = $this->getUserAttribute($user, 'fitness_level', 'intermediate');
         $userName = $this->getUserAttribute($user, 'name', 'friend');
         
+        // Fetch next upcoming confirmed booking
+        $nextBooking = \App\Models\Booking::where('trainee_id', $user->id)
+            ->where('status', 'confirmed')
+            ->where('session_date', '>=', now())
+            ->with('trainer')
+            ->orderBy('session_date', 'asc')
+            ->first();
+            
+        $humanTrainerName = $nextBooking && $nextBooking->trainer ? $nextBooking->trainer->name : 'None';
+        $nextSessionTime = $nextBooking ? \Carbon\Carbon::parse($nextBooking->session_date)->format('F j, Y \a\t g:i A') : 'None';
+        
+        // Fetch the most recently assigned workout by their trainer
+        $assignedWorkout = \App\Models\Workout::where('trainee_id', $user->id)
+            ->whereNotNull('assigned_by')
+            ->orderBy('created_at', 'desc')
+            ->first();
+            
+        $assignedWorkoutStr = 'None';
+        if ($assignedWorkout) {
+            $workoutDetails = "Title: {$assignedWorkout->title}, Type: {$assignedWorkout->type}, Difficulty: {$assignedWorkout->difficulty}";
+            if (!empty($assignedWorkout->exercises)) {
+                $exerciseDetails = [];
+                foreach ($assignedWorkout->exercises as $ex) {
+                    $exerciseId = $ex['exercise_id'] ?? null;
+                    if ($exerciseId) {
+                        $exercise = \App\Models\Exercise::find($exerciseId);
+                        $name = $exercise ? $exercise->name : 'Unknown Exercise';
+                        $sets = $ex['sets'] ?? 0;
+                        $reps = $ex['reps'] ?? 0;
+                        $exerciseDetails[] = "- {$name} ({$sets} sets of {$reps} reps)";
+                    }
+                }
+                if (!empty($exerciseDetails)) {
+                    $workoutDetails .= "\nExercises:\n" . implode("\n", $exerciseDetails);
+                }
+            }
+            if ($assignedWorkout->notes) {
+                $workoutDetails .= "\nNotes: {$assignedWorkout->notes}";
+            }
+            $assignedWorkoutStr = $workoutDetails;
+        }
+        
         $prompt = "You are 'VirtuCoach', an enthusiastic, knowledgeable fitness AI trainer.
         
 User: {$userName}
 Goal: {$goal}
 Fitness Level: {$fitnessLevel}
+Active Human Trainer: {$humanTrainerName}
+Next Scheduled Session: {$nextSessionTime}
+Assigned Workout by Trainer: {$assignedWorkoutStr}
 
 User message: \"{$message}\"
 
@@ -217,13 +262,16 @@ Respond as VirtuCoach. Be:
 - Practical and evidence-based
 - Concise (2-4 sentences normally)
 - Use emojis occasionally (💪, 🎯, 🔥, ✅)
+- If the user asks about their human trainer, you can mention their name is {$humanTrainerName}.
+- If the user asks about their next session, tell them it is scheduled for {$nextSessionTime} with {$humanTrainerName} (if a next session exists).
+- If the user asks about the workout assigned to them by their trainer, you can describe their assigned workout: {$assignedWorkoutStr}.
 
 If asked about medical issues, suggest consulting a doctor.
 If unsure, be honest and recommend professional guidance.
 
 Your response (no JSON, just natural conversation):";
 
-        return $this->generate($prompt, 0.8, 300);
+        return $this->generate($prompt, 0.8, 2000);
     }
     
     /**
@@ -313,7 +361,7 @@ Be realistic but encouraging. Base on standard fitness progression rates.";
         ];
         
         $randomPrompt = $prompts[array_rand($prompts)];
-        $response = $this->generate($randomPrompt, 0.9, 100);
+        $response = $this->generate($randomPrompt, 0.9, 1000);
         
         // If AI response is empty, return a default quote
         if (empty($response) || strlen($response) < 10) {
@@ -435,26 +483,29 @@ Use emojis. Make it personal and encouraging.";
      */
     private function getFallbackResponse($prompt)
     {
-        if (str_contains($prompt, 'workout') && str_contains($prompt, 'JSON')) {
+        // Chat prompts always say "VirtuCoach" — always return natural language for these
+        if (str_contains($prompt, 'VirtuCoach')) {
+            if (str_contains(strtolower($prompt), 'workout') || str_contains(strtolower($prompt), 'exercise') || str_contains(strtolower($prompt), 'routine') || str_contains(strtolower($prompt), 'training')) {
+                return "💪 Great question! Here's a solid full-body routine you can start with:\n\n**🔥 Warm-up (5 min)**\n- Jumping jacks: 60 sec\n- Arm circles: 30 sec each direction\n- Light jog in place: 3 min\n\n**💪 Main Circuit (3 rounds)**\n- Push-ups: 10–12 reps\n- Squats: 15 reps\n- Planks: 30 sec\n- Lunges: 10 each side\n\n**🧘 Cool-down (5 min)**\n- Full body stretching\n\nStay consistent and you'll see amazing results! 🎯";
+            }
+            if (str_contains(strtolower($prompt), 'nutrition') || str_contains(strtolower($prompt), 'diet') || str_contains(strtolower($prompt), 'meal') || str_contains(strtolower($prompt), 'calor')) {
+                return "🥗 Fuel your body right! Here are some practical nutrition tips:\n\n- **Protein**: Include lean protein in every meal (chicken, eggs, tofu)\n- **Carbs**: Opt for complex carbs — oats, brown rice, sweet potato\n- **Hydration**: Aim for 2.5–3L of water daily 💧\n- **Timing**: Have a light carb + protein snack before workouts\n- **Avoid**: Excess processed sugar and late-night heavy meals\n\nSmall consistent changes = big long-term results! ✨";
+            }
+            if (str_contains(strtolower($prompt), 'motivat')) {
+                return "🔥 \"Success is not given — it's earned one rep at a time. Keep showing up!\" 💪\n\nYou've got this. Every session brings you closer to your goal. 🎯";
+            }
+            return "I'm here to help with your fitness journey! 🌟 Ask me about workouts, nutrition, form tips, or motivation — and I'll give you my best guidance. 💪";
+        }
+
+        // Structural data prompts that explicitly need JSON
+        if (str_contains($prompt, 'Return ONLY JSON') || str_contains($prompt, 'Return ONLY valid JSON') || str_contains($prompt, 'Return a JSON object')) {
             return json_encode($this->getFallbackData());
         }
-        
-        if (str_contains($prompt, 'workout')) {
-            return "💪 Try this effective full-body workout:\n\n🔥 Warm-up (5 min)\n• Jumping jacks: 60 sec\n• Arm circles: 30 sec\n• Light jog: 3 min\n\n💪 Main (3 rounds)\n• Push-ups: 10-12 reps\n• Squats: 15 reps\n• Planks: 30 sec\n• Lunges: 10 each\n\n🧘 Cool-down (5 min)\n• Full body stretching\n\nStay consistent and you'll see amazing results! 🎯";
-        }
-        
-        if (str_contains($prompt, 'nutrition')) {
-            return "🥗 Healthy Eating Tips:\n\n• Eat lean protein with every meal\n• Fill half your plate with veggies\n• Stay hydrated: 2-3L water daily\n• Complex carbs before workout\n• Listen to hunger cues\n\nSmall changes = big results! ✨";
-        }
-        
-        if (str_contains($prompt, 'motivation')) {
-            return "✨ 'Your only limit is your mind. Keep pushing, keep growing, keep believing!' 💪🔥";
-        }
-        
+
         if (str_contains($prompt, 'form_quality') || str_contains($prompt, '"form_quality"')) {
             return json_encode($this->getFallbackData());
         }
-        
+
         return "I'm here to help! Ask me about workouts, nutrition, form, or motivation! 🌟💪";
     }
     

@@ -3,7 +3,7 @@
 @section('title', 'Trainer Dashboard')
 
 @section('content')
-<div style="max-width:1280px;margin:0 auto;padding-bottom: 3rem;">
+<div style="max-width:1450px;margin:0 auto;padding-bottom: 3rem;">
 
     {{-- Welcome Banner --}}
     <div style="background:linear-gradient(135deg,rgba(139,92,246,.18),rgba(236,72,153,.12));border:1px solid rgba(139,92,246,.28);border-radius:28px;padding:2.5rem;margin-bottom:2.5rem;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2rem;" class="fade-in-up">
@@ -232,7 +232,7 @@
                     <h2 style="font-size:1.1rem;font-weight:800;color:#fff;">Assigned Workouts</h2>
                     <div style="display:flex;gap:12px;align-items:center;">
                         <a href="{{ route('workouts.index') }}" style="color:rgba(255,255,255,0.4);font-size:.8rem;font-weight:600;text-decoration:none;">View All</a>
-                        <a href="{{ route('workouts.index') }}" style="color:var(--vg-accent);font-size:.8rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:4px;">
+                        <a href="{{ route('workouts.index', ['create' => 1]) }}" style="color:var(--vg-accent);font-size:.8rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:4px;">
                             <i data-lucide="plus" style="width:14px;height:14px;"></i> Create
                         </a>
                     </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Exercise;
 use App\Models\Workout;
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -135,11 +136,18 @@ class ExerciseController extends Controller
     public function getUserWorkouts($userId)
     {
         try {
-            // Safety check: Can the current user see these workouts?
             if (Auth::user()->role === 'trainer') {
-                // Trainer can only see workouts they assigned or for their clients
+                // Verify trainer has a booking relationship with this client
+                $isClient = Booking::where('trainer_id', Auth::id())
+                    ->where('trainee_id', (string)$userId)
+                    ->whereIn('status', ['confirmed', 'completed', 'active'])
+                    ->exists();
+
+                if (!$isClient) {
+                    return response()->json(['error' => 'Unauthorized'], 403);
+                }
+
                 $workouts = Workout::where('trainee_id', (string)$userId)
-                    ->where('trainer_id', (string)Auth::id())
                     ->get(['_id', 'title', 'scheduled_date']);
             } else {
                 // Trainee can only see their own workouts

@@ -20,19 +20,19 @@
         padding: 10px !important;
     }
 </style>
-<div style="max-width:1100px;margin:0 auto;">
+<div style="max-width:1450px;margin:0 auto;">
     {{-- Back Link & Actions --}}
     <div style="margin-bottom:2rem; display: flex; justify-content: space-between; align-items: center;" class="fade-in-up">
         <a href="{{ route('exercises.index') }}" style="color:#c4b5fd;text-decoration:none;font-size:.9rem;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:all .3s; background: rgba(139,92,246,0.1); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(139,92,246,0.2);" onmouseover="this.style.background='rgba(139,92,246,0.2)'" onmouseout="this.style.background='rgba(139,92,246,0.1)'">
             <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> Back to Library
         </a>
         
-        <div style="display: flex; gap: 12px;">
-            <button onclick="toggleFavorite(this, '{{ (string)$exercise->id }}')" class="btn-outline" style="border-radius: 12px; padding: 10px 16px;">
-                <i data-lucide="bookmark" style="width: 18px; height: 18px; margin-right: 8px;"></i> Save Exercise
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button onclick="toggleFavorite(this, '{{ (string)$exercise->id }}')" class="favorite-btn" style="border-radius: 12px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; transition: all 0.3s;" onmouseover="if(!this.classList.contains('is-favorite')) this.style.background='rgba(255,255,255,0.1)'" onmouseout="if(!this.classList.contains('is-favorite')) this.style.background='rgba(255, 255, 255, 0.05)'">
+                <i data-lucide="bookmark" style="width: 18px; height: 18px;"></i> Save Exercise
             </button>
-            <button onclick="openWorkoutModal('{{ (string)$exercise->id }}')" class="btn-premium">
-                <i data-lucide="plus" style="width: 18px; height: 18px; margin-right: 8px;"></i> Add to Workout
+            <button onclick="openWorkoutModal('{{ (string)$exercise->id }}')" style="border-radius: 12px; padding: 8px 16px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; border: 1px solid transparent; background: linear-gradient(135deg, #8b5cf6, #ec4899); color: #fff; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(139, 92, 246, 0.5)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(139, 92, 246, 0.3)'">
+                <i data-lucide="plus" style="width: 18px; height: 18px;"></i> Add to Workout
             </button>
         </div>
     </div>
@@ -68,6 +68,36 @@
                 </div>
 
                 <div style="padding: 2.5rem;">
+                    {{-- Exercise Video Tutorial --}}
+                    @if($exercise->video_url)
+                        <div style="margin-bottom: 3rem;">
+                            <h2 style="font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 12px;">
+                                <span style="background: var(--vg-accent); color: #fff; width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+                                    <i data-lucide="video" style="width: 16px; height: 16px;"></i>
+                                </span>
+                                Video Demonstration
+                            </h2>
+                            <div style="width:100%;border-radius:24px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);box-shadow: 0 10px 30px rgba(0,0,0,0.45);background:#000;">
+                                @if(Str::contains($exercise->video_url, ['youtube.com', 'youtu.be']))
+                                    @php 
+                                        $videoId = '';
+                                        if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/ ]{11})%i', $exercise->video_url, $match)) {
+                                            $videoId = $match[1];
+                                        }
+                                    @endphp
+                                    <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;width:100%;">
+                                        <iframe style="position:absolute;top:0;left:0;width:100%;height:100%;" 
+                                                src="https://www.youtube.com/embed/{{ $videoId }}" 
+                                                frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+                                        </iframe>
+                                    </div>
+                                @else
+                                    <video src="{{ $exercise->video_url }}" controls style="width:100%;display:block;"></video>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Step by Step --}}
                     <div style="margin-bottom: 3rem;">
                         <h2 style="font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 12px;">
@@ -127,8 +157,8 @@
         </div>
 
         {{-- Right Column: Stats & Diagrams --}}
-        <div>
-            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.18);border-radius:24px;padding:1.8rem; position: sticky; top: 2rem;">
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.18);border-radius:24px;padding:1.8rem;">
                 <h3 style="font-size: 1.1rem; font-weight: 900; color: #fff; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">Training Focus</h3>
                 
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -210,18 +240,7 @@
                 @endif
             </div>
             
-            @if(Auth::user()->role === 'trainer')
-                <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:16px;padding:2rem;text-align:center;">
-                    <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:.5rem;">Ready to add this exercise?</h3>
-                    <p style="color:rgba(255,255,255,.5);font-size:.9rem;margin-bottom:1.5rem;">Add this exercise to a client's workout plan</p>
-                    <a href="{{ route('workouts.create') }}" 
-                       style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff;text-decoration:none;padding:12px 24px;border-radius:12px;font-size:.9rem;font-weight:700;box-shadow:0 8px 20px rgba(139,92,246,.35);transition:all .3s;"
-                       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 30px rgba(139,92,246,.5)'"
-                       onmouseout="this.style.transform='';this.style.boxShadow='0 8px 20px rgba(139,92,246,.35)'">
-                        Add to Workout Plan →
-                    </a>
-                </div>
-            @endif
+
         </div>
     </div>
 </div>
@@ -308,8 +327,10 @@
                 }
                 clients.forEach(client => {
                     const btn = document.createElement('button');
-                    btn.className = 'btn-outline';
-                    btn.style = 'justify-content: space-between; padding: 14px 18px; border-radius: 16px; width: 100%; margin-bottom: 8px;';
+                    btn.className = 'favorite-btn';
+                    btn.style = 'display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 16px; width: 100%; margin-bottom: 8px; border: 1px solid rgba(139, 92, 246, 0.2); background: rgba(139, 92, 246, 0.05); color: #fff; cursor: pointer; transition: all 0.3s;';
+                    btn.onmouseover = () => { btn.style.background = 'rgba(139, 92, 246, 0.15)'; btn.style.borderColor = 'rgba(139, 92, 246, 0.4)'; };
+                    btn.onmouseout = () => { btn.style.background = 'rgba(139, 92, 246, 0.05)'; btn.style.borderColor = 'rgba(139, 92, 246, 0.2)'; };
                     btn.innerHTML = `
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 32px; height: 32px; background: rgba(139,92,246,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #c4b5fd;">${client.name.charAt(0)}</div>
@@ -354,6 +375,17 @@
             .then(response => response.json())
             .then(workouts => {
                 document.getElementById('modalLoading').style.display = 'none';
+                
+                if (workouts.error) {
+                    alert('❌ Error: ' + workouts.error);
+                    if (userRole === 'trainer') {
+                        showClientStep();
+                    } else {
+                        closeWorkoutModal();
+                    }
+                    return;
+                }
+
                 document.getElementById('workoutListStep').style.display = 'flex';
                 
                 const container = document.getElementById('workoutItems');
@@ -365,10 +397,12 @@
                     document.getElementById('noWorkoutsMsg').style.display = 'none';
                     workouts.forEach(workout => {
                         const btn = document.createElement('button');
-                        btn.className = 'btn-outline';
-                        btn.style = 'justify-content: space-between; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; width: 100%; text-align: left;';
+                        btn.className = 'favorite-btn';
+                        btn.style = 'display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; width: 100%; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: #fff; cursor: pointer; transition: all 0.3s;';
+                        btn.onmouseover = () => { btn.style.background = 'rgba(255, 255, 255, 0.08)'; btn.style.borderColor = 'rgba(255, 255, 255, 0.2)'; };
+                        btn.onmouseout = () => { btn.style.background = 'rgba(255, 255, 255, 0.03)'; btn.style.borderColor = 'rgba(255, 255, 255, 0.1)'; };
                         btn.innerHTML = `
-                            <div>
+                            <div style="text-align: left;">
                                 <div style="font-weight: 700; color: #fff;">${workout.title}</div>
                                 <div style="font-size: 0.7rem; color: rgba(255,255,255,0.3);">${new Date(workout.scheduled_date).toLocaleDateString()}</div>
                             </div>
@@ -409,11 +443,14 @@
         if (favorites.includes(exerciseId)) {
             favorites = favorites.filter(id => id !== exerciseId);
             btn.style.color = '#fff';
-            btn.style.background = 'transparent';
+            btn.style.background = 'rgba(255, 255, 255, 0.05)';
+            btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            btn.classList.remove('is-favorite');
         } else {
             favorites.push(exerciseId);
             btn.style.color = '#fbbf24';
-            btn.style.background = 'rgba(251,191,36,0.1)';
+            btn.style.background = 'rgba(251, 191, 36, 0.1)';
+            btn.style.borderColor = 'rgba(251, 191, 36, 0.2)';
             btn.classList.add('is-favorite');
         }
         localStorage.setItem('vg_favorites', JSON.stringify(favorites));
@@ -426,7 +463,8 @@
             const btn = document.querySelector('.favorite-btn');
             if (btn) {
                 btn.style.color = '#fbbf24';
-                btn.style.background = 'rgba(251,191,36,0.1)';
+                btn.style.background = 'rgba(251, 191, 36, 0.1)';
+                btn.style.borderColor = 'rgba(251, 191, 36, 0.2)';
                 btn.classList.add('is-favorite');
             }
         }
@@ -464,6 +502,7 @@
         cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     #workoutItems::-webkit-scrollbar { width: 5px; }
+    #workoutItems::-webkit-scrollbar-track { background: transparent; }
     #workoutItems::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 10px; }
 </style>
 @endpush

@@ -154,12 +154,23 @@
                         <span class="availability-badge {{ $isBusy ? 'busy' : '' }}">
                             {{ $isBusy ? '● Busy Today' : '● Available Today' }}
                         </span>
-                        <div class="trainer-avatar">{{ $initial }}</div>
+                        <div class="trainer-avatar" style="overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--vg-bg);">
+                            @if($trainer->profile_photo)
+                                <img src="{{ asset('storage/' . $trainer->profile_photo) }}" alt="{{ $trainer->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            @else
+                                {{ $initial }}
+                            @endif
+                        </div>
                     </div>
 
                     <div style="padding:3.5rem 1.5rem 1.5rem;">
                         <div style="text-align:center;margin-bottom:1.5rem;">
-                            <h3 style="font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:4px;">{{ $trainer->name }}</h3>
+                            <h3 style="font-size:1.4rem;font-weight:800;color:#fff;margin-bottom:4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%;">
+                                {{ $trainer->name }}
+                                @if($trainer->is_verified)
+                                    <span title="Verified Trainer" style="background: #10b981; color: #fff; width: 16px; height: 16px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; box-shadow: 0 0 8px rgba(16,185,129,0.5);">✓</span>
+                                @endif
+                            </h3>
                             <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
                                 @php
                                     $specs = explode(',', $trainer->specialization ?? 'Strength,HIIT');

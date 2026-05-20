@@ -19,6 +19,71 @@ class MusicController extends Controller
         return view('music.index', compact('hasBookedSession', 'youtubeConfigured'));
     }
 
+    private function getFallbackTracks(string $query = ''): array
+    {
+        $allFallbacks = [
+            [
+                'video_id' => '2S24-y0Ij3Y',
+                'title' => 'NEFFEX - Fight Back [Workout Motivation]',
+                'channel' => 'NEFFEX Music',
+                'thumbnail' => 'https://img.youtube.com/vi/2S24-y0Ij3Y/0.jpg',
+            ],
+            [
+                'video_id' => '83R59AnBY90',
+                'title' => 'NEFFEX - Grateful [Clean Gym Motivation]',
+                'channel' => 'NEFFEX Music',
+                'thumbnail' => 'https://img.youtube.com/vi/83R59AnBY90/0.jpg',
+            ],
+            [
+                'video_id' => 'B3_m9z2p4J0',
+                'title' => 'NEFFEX - Cold [Aggressive Training Beat]',
+                'channel' => 'NEFFEX Music',
+                'thumbnail' => 'https://img.youtube.com/vi/B3_m9z2p4J0/0.jpg',
+            ],
+            [
+                'video_id' => '4bS1W1nE_U0',
+                'title' => 'NEFFEX - Crown [Power Gym Beat]',
+                'channel' => 'NEFFEX Music',
+                'thumbnail' => 'https://img.youtube.com/vi/4bS1W1nE_U0/0.jpg',
+            ],
+            [
+                'video_id' => '24C8r8JupYY',
+                'title' => 'NEFFEX - Destiny [High-Energy Workout]',
+                'channel' => 'NEFFEX Music',
+                'thumbnail' => 'https://img.youtube.com/vi/24C8r8JupYY/0.jpg',
+            ],
+            [
+                'video_id' => 'jfKfPfyJRdk',
+                'title' => 'VirtuGym Clean Lo-Fi Workout Background Beats',
+                'channel' => 'VirtuGym Premium',
+                'thumbnail' => 'https://img.youtube.com/vi/jfKfPfyJRdk/0.jpg',
+            ],
+            [
+                'video_id' => 'K4DyBUG242c',
+                'title' => 'NCS: Workout Music Mix [No Copyright]',
+                'channel' => 'NoCopyrightSounds',
+                'thumbnail' => 'https://img.youtube.com/vi/K4DyBUG242c/0.jpg',
+            ],
+            [
+                'video_id' => 'F82A5yDkiQ4',
+                'title' => 'Gym Workout Beats - Till I Collapse (Inst. Edit)',
+                'channel' => 'Workout Beats',
+                'thumbnail' => 'https://img.youtube.com/vi/F82A5yDkiQ4/0.jpg',
+            ],
+        ];
+
+        if (empty($query)) {
+            return $allFallbacks;
+        }
+
+        // Fuzzy match on title or channel
+        $filtered = array_filter($allFallbacks, function ($track) use ($query) {
+            return mb_stripos($track['title'], $query) !== false || mb_stripos($track['channel'], $query) !== false;
+        });
+
+        return !empty($filtered) ? array_values($filtered) : $allFallbacks;
+    }
+
     public function search(Request $request)
     {
         if (!$this->hasConfirmedTraineeBooking()) {
@@ -32,40 +97,38 @@ class MusicController extends Controller
         $apiKey = config('services.youtube.key');
 
         if (!$apiKey) {
-            return response()->json([
-                'message' => 'YouTube API key is not configured.',
-            ], 422);
+            $songs = $this->getFallbackTracks($validated['q']);
+            return response()->json(['songs' => $songs]);
         }
 
         try {
             $response = $this->youtubeSearch($validated['q'], 8, $apiKey);
+            
+            if (!$response->successful()) {
+                $songs = $this->getFallbackTracks($validated['q']);
+                return response()->json(['songs' => $songs]);
+            }
+
+            $songs = collect($response->json('items', []))
+                ->filter(fn ($item) => !empty($item['id']['videoId']))
+                ->map(function ($item) {
+                    return [
+                        'video_id' => $item['id']['videoId'],
+                        'title' => $item['snippet']['title'] ?? 'Untitled video',
+                        'channel' => $item['snippet']['channelTitle'] ?? 'YouTube',
+                        'thumbnail' => $item['snippet']['thumbnails']['medium']['url']
+                            ?? $item['snippet']['thumbnails']['default']['url']
+                            ?? null,
+                    ];
+                })
+                ->values();
+
+            return response()->json(['songs' => $songs]);
+
         } catch (ConnectionException|RequestException $exception) {
-            return response()->json([
-                'message' => 'YouTube search timed out. Please try again.',
-            ], 504);
+            $songs = $this->getFallbackTracks($validated['q']);
+            return response()->json(['songs' => $songs]);
         }
-
-        if (!$response->successful()) {
-            return response()->json([
-                'message' => 'Could not search YouTube right now. Please try again.',
-            ], $response->status() >= 400 ? 502 : 500);
-        }
-
-        $songs = collect($response->json('items', []))
-            ->filter(fn ($item) => !empty($item['id']['videoId']))
-            ->map(function ($item) {
-                return [
-                    'video_id' => $item['id']['videoId'],
-                    'title' => $item['snippet']['title'] ?? 'Untitled video',
-                    'channel' => $item['snippet']['channelTitle'] ?? 'YouTube',
-                    'thumbnail' => $item['snippet']['thumbnails']['medium']['url']
-                        ?? $item['snippet']['thumbnails']['default']['url']
-                        ?? null,
-                ];
-            })
-            ->values();
-
-        return response()->json(['songs' => $songs]);
     }
 
     public function defaultTrack()
@@ -77,40 +140,45 @@ class MusicController extends Controller
         $apiKey = config('services.youtube.key');
 
         if (!$apiKey) {
+            $songs = $this->getFallbackTracks();
             return response()->json([
-                'message' => 'YouTube API key is not configured.',
-            ], 422);
+                'song' => $songs[0],
+            ]);
         }
 
         try {
             $response = $this->youtubeSearch('gym workout music motivation clean', 1, $apiKey);
+            
+            if (!$response->successful()) {
+                $songs = $this->getFallbackTracks();
+                return response()->json([
+                    'song' => $songs[0],
+                ]);
+            }
+
+            $item = collect($response->json('items', []))->firstWhere('id.videoId');
+
+            if (!$item) {
+                $songs = $this->getFallbackTracks();
+                return response()->json([
+                    'song' => $songs[0],
+                ]);
+            }
+
+            return response()->json([
+                'song' => [
+                    'video_id' => $item['id']['videoId'],
+                    'title' => $item['snippet']['title'] ?? 'Workout music',
+                    'channel' => $item['snippet']['channelTitle'] ?? 'YouTube',
+                ],
+            ]);
+
         } catch (ConnectionException|RequestException $exception) {
+            $songs = $this->getFallbackTracks();
             return response()->json([
-                'message' => 'Could not load background music.',
-            ], 504);
+                'song' => $songs[0],
+            ]);
         }
-
-        if (!$response->successful()) {
-            return response()->json([
-                'message' => 'Could not load background music.',
-            ], 502);
-        }
-
-        $item = collect($response->json('items', []))->firstWhere('id.videoId');
-
-        if (!$item) {
-            return response()->json([
-                'message' => 'No background music track found.',
-            ], 404);
-        }
-
-        return response()->json([
-            'song' => [
-                'video_id' => $item['id']['videoId'],
-                'title' => $item['snippet']['title'] ?? 'Workout music',
-                'channel' => $item['snippet']['channelTitle'] ?? 'YouTube',
-            ],
-        ]);
     }
 
     public function backgroundTrack()
@@ -119,8 +187,9 @@ class MusicController extends Controller
         $fallbackVideoId = config('services.youtube.background_video_id');
 
         if (!$apiKey) {
+            $songs = $this->getFallbackTracks();
             return response()->json([
-                'song' => [
+                'song' => $songs[0] ?? [
                     'video_id' => $fallbackVideoId,
                     'title' => 'VirtuGym background workout music',
                     'channel' => 'YouTube',
@@ -130,35 +199,38 @@ class MusicController extends Controller
 
         try {
             $response = $this->youtubeSearch('gym workout music motivation clean no copyright', 1, $apiKey);
+            
+            if (!$response->successful()) {
+                $songs = $this->getFallbackTracks();
+                return response()->json([
+                    'song' => $songs[0] ?? [
+                        'video_id' => $fallbackVideoId,
+                        'title' => 'VirtuGym background workout music',
+                        'channel' => 'YouTube',
+                    ],
+                ]);
+            }
+
+            $item = collect($response->json('items', []))->firstWhere('id.videoId');
+
+            return response()->json([
+                'song' => [
+                    'video_id' => $item['id']['videoId'] ?? $fallbackVideoId,
+                    'title' => $item['snippet']['title'] ?? 'VirtuGym background workout music',
+                    'channel' => $item['snippet']['channelTitle'] ?? 'YouTube',
+                ],
+            ]);
+
         } catch (ConnectionException|RequestException $exception) {
+            $songs = $this->getFallbackTracks();
             return response()->json([
-                'song' => [
+                'song' => $songs[0] ?? [
                     'video_id' => $fallbackVideoId,
                     'title' => 'VirtuGym background workout music',
                     'channel' => 'YouTube',
                 ],
             ]);
         }
-
-        if (!$response->successful()) {
-            return response()->json([
-                'song' => [
-                    'video_id' => $fallbackVideoId,
-                    'title' => 'VirtuGym background workout music',
-                    'channel' => 'YouTube',
-                ],
-            ]);
-        }
-
-        $item = collect($response->json('items', []))->firstWhere('id.videoId');
-
-        return response()->json([
-            'song' => [
-                'video_id' => $item['id']['videoId'] ?? $fallbackVideoId,
-                'title' => $item['snippet']['title'] ?? 'VirtuGym background workout music',
-                'channel' => $item['snippet']['channelTitle'] ?? 'YouTube',
-            ],
-        ]);
     }
 
     private function youtubeSearch(string $query, int $maxResults, string $apiKey)

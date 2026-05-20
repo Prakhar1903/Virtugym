@@ -134,8 +134,8 @@
             </div>
             
             <div style="display:flex;gap:1rem;">
-                <a href="{{ route('trainee.trainers') }}" style="flex:1;text-align:center;padding:14px;border-radius:12px;font-weight:700;color:var(--vg-text-muted);background:var(--vg-sidebar);border:1px solid var(--vg-border);text-decoration:none;">Cancel</a>
-                <button type="submit" style="flex:2;background:var(--vg-gradient);color:#fff;padding:14px;border-radius:12px;font-weight:800;border:none;cursor:pointer;box-shadow:0 8px 20px var(--vg-accent-glow);">
+                <a href="{{ route('trainee.trainers') }}" style="flex:1;text-align:center;padding:14px;border-radius:12px;font-weight:700;color:var(--vg-text-muted);background:var(--vg-sidebar);border:1px solid var(--vg-border);text-decoration:none;transition:all .3s ease;" onmouseover="this.style.background='rgba(255,255,255,.05)';this.style.color='#fff'" onmouseout="this.style.background='var(--vg-sidebar)';this.style.color='var(--vg-text-muted)'">Cancel</a>
+                <button type="submit" style="flex:2;background:var(--vg-gradient);color:#fff;padding:14px;border-radius:12px;font-weight:800;border:none;cursor:pointer;box-shadow:0 8px 20px var(--vg-accent-glow);transition:all .3s ease;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 12px 25px var(--vg-accent-glow)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 8px 20px var(--vg-accent-glow)'">
                     Proceed to Payment →
                 </button>
             </div>

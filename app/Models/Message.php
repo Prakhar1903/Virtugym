@@ -11,7 +11,8 @@ class Message extends Model
     
     protected $fillable = [
         'sender_id', 'receiver_id', 'message', 'is_read',
-        'booking_id', 'read_at', 'created_at', 'updated_at'
+        'booking_id', 'read_at', 'created_at', 'updated_at',
+        'attachment_path', 'attachment_name', 'attachment_type'
     ];
     
     protected $casts = [

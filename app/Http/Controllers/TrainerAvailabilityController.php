@@ -28,15 +28,15 @@ class TrainerAvailabilityController extends Controller
             ->get();
             
         $weeklyBookingsCount = $confirmedBookings->count();
-        $weeklyEarnings = $confirmedBookings->sum('total_amount');
+        $weeklyEarnings = $confirmedBookings->sum('amount');
         
         $cancelledBookingsCount = Booking::where('trainer_id', $trainer->id)
             ->whereBetween('session_date', [$startOfWeek, $endOfWeek])
             ->where('status', 'cancelled')
             ->count();
             
-        // For total slots, we count occurrences across the week (this is a simplified logic)
-        $totalSlotsCount = $availabilities->count() * 7; 
+        // Weekly capacity is simply the total count of availability slot configurations
+        $totalSlotsCount = $availabilities->count(); 
         
         // Today's Bookings
         $todaysBookings = Booking::where('trainer_id', $trainer->id)
@@ -47,13 +47,27 @@ class TrainerAvailabilityController extends Controller
         // Group availabilities by day for the calendar view
         $groupedAvailabilities = $availabilities->groupBy('day_of_week');
 
+        // Load all weekly confirmed bookings in memory to prevent heavy database queries in loop
+        $weeklyBookings = Booking::where('trainer_id', $trainer->id)
+            ->whereBetween('session_date', [$startOfWeek, $endOfWeek])
+            ->where('status', 'confirmed')
+            ->get();
+
         // Check each slot's booked status for the current week specifically
         foreach ($availabilities as $slot) {
-            $slot->is_booked_this_week = Booking::where('trainer_id', $trainer->id)
-                ->where('day_of_week', (int)$slot->day_of_week)
-                ->whereBetween('session_date', [$startOfWeek, $endOfWeek])
-                ->where('status', 'confirmed')
-                ->exists();
+            $slotTime = \Carbon\Carbon::parse($slot->start_time)->format('H:i');
+            
+            $slot->is_booked_this_week = $weeklyBookings->contains(function ($booking) use ($slot, $slotTime) {
+                // Match day of week
+                $bookingDay = (int)\Carbon\Carbon::parse($booking->session_date)->format('w');
+                if ($bookingDay !== (int)$slot->day_of_week) {
+                    return false;
+                }
+                
+                // Match start time
+                $bookingTime = \Carbon\Carbon::parse($booking->session_date)->format('H:i');
+                return $bookingTime === $slotTime;
+            });
                 
             $slot->bookings_count = Booking::where('trainer_id', $trainer->id)
                 ->where('day_of_week', (int)$slot->day_of_week)
@@ -81,7 +95,7 @@ class TrainerAvailabilityController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'session_type' => 'nullable|string',
-            'is_recurring' => 'nullable|boolean'
+            'is_recurring' => 'nullable'
         ]);
         
         if ($validator->fails()) {
@@ -89,8 +103,35 @@ class TrainerAvailabilityController extends Controller
         }
 
         $days = $request->day_of_week ?? [$request->single_day];
-        
+
+        $newStart = \Carbon\Carbon::parse($request->start_time)->format('H:i');
+        $newEnd = \Carbon\Carbon::parse($request->end_time)->format('H:i');
+
+        if ($newStart >= $newEnd) {
+            return redirect()->back()->with('error', 'End time must be after start time.');
+        }
+
         foreach ($days as $day) {
+            // Check for overlapping availability slots
+            $existingSlots = TrainerAvailability::where('trainer_id', Auth::id())
+                ->where('day_of_week', (int)$day)
+                ->get();
+                
+            $hasOverlap = false;
+            foreach ($existingSlots as $slot) {
+                $slotStart = \Carbon\Carbon::parse($slot->start_time)->format('H:i');
+                $slotEnd = \Carbon\Carbon::parse($slot->end_time)->format('H:i');
+                
+                if ($newStart < $slotEnd && $newEnd > $slotStart) {
+                    $hasOverlap = true;
+                    break;
+                }
+            }
+
+            if ($hasOverlap) {
+                return redirect()->back()->with('error', 'The selected time slot overlaps with an existing availability.');
+            }
+
             TrainerAvailability::create([
                 'trainer_id' => Auth::id(),
                 'day_of_week' => (int)$day,
@@ -113,11 +154,38 @@ class TrainerAvailabilityController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'session_type' => 'nullable|string',
-            'is_recurring' => 'nullable|boolean'
+            'is_recurring' => 'nullable'
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator);
+        }
+
+        $newStart = \Carbon\Carbon::parse($request->start_time)->format('H:i');
+        $newEnd = \Carbon\Carbon::parse($request->end_time)->format('H:i');
+
+        if ($newStart >= $newEnd) {
+            return redirect()->back()->with('error', 'End time must be after start time.');
+        }
+
+        $existingSlots = TrainerAvailability::where('trainer_id', Auth::id())
+            ->where('day_of_week', $availability->day_of_week)
+            ->where('_id', '!=', $id)
+            ->get();
+            
+        $hasOverlap = false;
+        foreach ($existingSlots as $slot) {
+            $slotStart = \Carbon\Carbon::parse($slot->start_time)->format('H:i');
+            $slotEnd = \Carbon\Carbon::parse($slot->end_time)->format('H:i');
+            
+            if ($newStart < $slotEnd && $newEnd > $slotStart) {
+                $hasOverlap = true;
+                break;
+            }
+        }
+
+        if ($hasOverlap) {
+            return redirect()->back()->with('error', 'The updated time slot overlaps with an existing availability.');
         }
 
         $availability->update([
